@@ -1,0 +1,10 @@
+numpy==1.19.5
+h5py==2.10.0
+keras==2.2.5
+tensorflow==1.14.0
+biopython==1.78
+numba==0.52.0
+pandas==1.1.5
+scipy==1.5.4
+matplotlib==3.3.3
+scikit-learn==0.24.2

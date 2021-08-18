@@ -1,0 +1,7 @@
+open annotated_2kho.pdb
+dssp
+hide atoms
+show cartoon
+color gray transparency 10
+color by bfactor /A range 0.0,0.7  transparency 0
+lighting soft
