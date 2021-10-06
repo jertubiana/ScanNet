@@ -151,6 +151,12 @@ class point_Predictor_wrapper(Predictor_wrapper):
             sample_weight = stack_list_of_arrays(sample_weight)
         inputs = stack_list_of_arrays(inputs)
         outputs = stack_list_of_arrays(outputs)
+        mask = (outputs==-1) | np.isnan(outputs) | (np.isinf(outputs)) | np.isinf(inputs).max(-1) | np.isnan(inputs).max(-1) # -1 = missing value.
+        if mask.max():
+            print('Discarding %s residues (missing label and/or nans)'%mask.sum() )
+            inputs = inputs[~mask]
+            outputs = outputs[~mask]
+        sample_weight = sample_weight[~mask]
         return self.model.fit(inputs, outputs, sample_weight=sample_weight, **kwargs)
 
     def predict(self, inputs, Ls=None, return_all=False):

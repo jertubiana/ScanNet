@@ -43,7 +43,7 @@ def show_binding_sites(
     for n in range(nstructures):
         if interface_predictions is not None:
             interface_predictions[n]['Color'] = [colors[bisect.bisect_left(
-                thresholds, probability)] for probability in interface_predictions[n]['Interface Probability']]
+                thresholds, probability)] for probability in interface_predictions[n]['Binding site probability']]
 
     output_full_name = output_name + '.py'
     with open(output_full_name, 'w') as f:
@@ -89,7 +89,7 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
     '''
     interface_predictions = pd.read_csv(csv_file, sep=',')
     resids = ['%s_%s_%s'%(x,y,z) for x,y,z in np.array(interface_predictions[['Model','Chain','Residue Index']]) ]
-    probas = np.array(interface_predictions['Interface Probability'])
+    probas = np.array(interface_predictions['Binding site probability'])
     model = -1
     multimodel = False
     is_cif = pdb_file[-4:] == '.cif'
@@ -155,6 +155,8 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
             f.write('dssp\n')
             f.write('hide atoms\n')
             f.write('show cartoon\n')
+            if not version == 'surface':
+                f.write('show surface\n')
             f.write('color gray transparency 10\n')
             list_chains = [x.split('_') for x in
                            np.unique([str(resids[u, 0]) + '_' + str(resids[u, 1]) for u in range(len(resids))])]
@@ -179,7 +181,8 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
                         f.write("color by bfactor /%s range %s,%s  transparency 0\n" % (
                              chain[1] , mini,maxi ))
 
-
+            if not version == 'surface':
+                f.write('hide surface\n')
             f.write('lighting soft\n')
 #            f.write('save %s.png format png width 4000 supersample 4 transparentBackground true\n'%output_file[:-4])
     return output_file

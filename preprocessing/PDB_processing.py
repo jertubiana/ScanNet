@@ -45,54 +45,6 @@ def is_hydrogen(atom):
 
 
 
-def load_chains(pdb_id=None,
-                         chain_ids='all',
-                         file=None,
-                         pdbparser=None, mmcifparser=None,
-                         structures_folder=structures_folder,
-                         dockground_indexing=False, biounit=True,verbose=True):
-    if pdbparser is None:
-        pdbparser = Bio.PDB.PDBParser()  # PDB parser; to read pdb files.
-    if mmcifparser is None:
-        mmcifparser = Bio.PDB.MMCIFParser()
-
-    assert (file is not None) | (pdb_id is not None)
-
-    if (file is None) & (pdb_id is not None):
-        file = PDBio.getPDB(pdb_id, biounit=biounit, structures_folder=structures_folder)[0]
-    else:
-        pdb_id = 'abcd'
-
-    if file[-4:] == '.cif':
-        parser = mmcifparser
-    else:
-        parser = pdbparser
-    if verbose:
-        print('Parsing %s'%file)
-    with warnings.catch_warnings(record=True) as w:
-        structure = parser.get_structure(pdb_id,  file)
-
-    chain_objs = []
-    if chain_ids in ['all','lower','upper']:
-        for model_obj in structure:
-            for chain_obj in model_obj:
-                condition1 = (chain_ids == 'all')
-                condition2 = ( (chain_ids == 'lower') & chain_obj.id.islower() )
-                condition3 = ( (chain_ids == 'upper') & (chain_obj.id.isupper() | (chain_obj.id == ' ') ) )
-                if condition1 | condition2 | condition3:
-                    chain_objs.append(chain_obj)
-    else:
-        for model, chain in chain_ids:
-            if dockground_indexing & (model > 0):
-                model_ = model - 1
-            else:
-                model_ = model
-
-            chain_obj = structure[model_][chain]
-            chain_objs.append(chain_obj)
-    return structure, chain_objs
-
-
 def process_chain(chain):
     sequence = ''
     backbone_coordinates = []
@@ -582,7 +534,7 @@ def make_values_dictionary(resids,values):
     dictionary_values = {}
     values_is_list = isinstance(values,list)
     for l,resid in enumerate(resids):
-        key = (int(resid[0]), resid[1], str(resid[2]) )
+        key = (int(resid[0]), resid[1], int(resid[2]) )
         if values_is_list:
             dictionary_values[ key ] = [value[l] for value in values]
         else:

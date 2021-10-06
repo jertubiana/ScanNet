@@ -7,6 +7,7 @@ import numpy as np
 import utilities.paths as paths
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
+from utilities.paths import library_folder
 
 
 def make_PR_curves(
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     '''
     Script to train and evaluate handcrafted feature baseline on the Protein-protein binding site data set.
     '''
-    check = True  # Check = True to verify installation, =False for full training.
+    check = False  # Check = True to verify installation, =False for full training.
     use_evolutionary = False  # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
 
 
@@ -131,8 +132,8 @@ if __name__ == '__main__':
 
     pipeline = pipelines.HandcraftedFeaturesPipeline(feature_list=feature_list)
 
-    list_dataset_locations = ['../datasets/PPBS/labels_%s.txt' % dataset for dataset in list_datasets]
-    dataset_table = pd.read_csv('../datasets/PPBS/table.csv', sep=',')
+    list_dataset_locations = [library_folder+'datasets/PPBS/labels_%s.txt' % dataset for dataset in list_datasets]
+    dataset_table = pd.read_csv(library_folder+'datasets/PPBS/table.csv', sep=',')
 
     list_inputs = []
     list_outputs = []
@@ -188,8 +189,7 @@ if __name__ == '__main__':
     train_outputs = list_outputs[0]
     train_weights = list_weights[0]
 
-    validation_inputs = [np.concatenate([list_inputs[i][j] for i in [1, 2, 3, 4]]) for j in
-                         range(len(list_inputs[0]))]
+    validation_inputs = np.concatenate([list_inputs for i in [1, 2, 3, 4]])
     validation_outputs = np.concatenate([list_outputs[i] for i in [1, 2, 3, 4]])
     validation_weights = np.concatenate([list_weights[i] for i in [1, 2, 3, 4]])
 
@@ -200,6 +200,7 @@ if __name__ == '__main__':
     )
     model.fit(train_inputs, train_outputs,
                         sample_weight=train_weights)
+    model.save(paths.model_folder + model_name)
     '''
     Note that here, we use a simple random forest classifier and do not run any hyperparameter search.
     In the paper, we used xgboost and extensive hyperparameter search on the validation set. 

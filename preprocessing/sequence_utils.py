@@ -5,7 +5,6 @@ from scipy.interpolate import interp1d
 import time
 import os
 from utilities.paths import path2hhblits,path2sequence_database
-from requests import get, post
 from time import sleep
 import sys
 
@@ -172,8 +171,8 @@ def compute_PWM(location, gap_threshold=0.3,
     if len(all_sequences)>=nmax:
         d2wt = (all_sequences != all_sequences[WT:WT+1]).mean(-1)
         subset = np.argsort(d2wt)[:nmax]
-        all_sequences = all_sequences[:nmax]
-        all_labels = all_labels[:nmax]
+        all_sequences = all_sequences[subset]
+        all_labels = all_labels[subset]
 
     all_weights = 1.0 / \
         count_neighbours(all_sequences, threshold=neighbours_threshold)

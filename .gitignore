@@ -117,3 +117,14 @@ dmypy.json
 # Local files.
 predictions/
 plots/
+pipelines/
+PDB/
+MSA/
+
+# Pycharm
+.idea/
+
+# MAC OS
+.DS_Store
+
+models/initial_values/*

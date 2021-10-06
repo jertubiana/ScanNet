@@ -87,7 +87,7 @@ Outputs are located in the predictions folder; one subfolder is created for each
 - A .cxc script for visualizing the results with ChimeraX https://www.rbvi.ucsf.edu/chimerax/ (right click -> open the file with chimeraX).
 - A .py script for visualizing the results with Chimera.
 
-Below is an example of outputs obtained by predicting PPBS on the Hsp70 protein in closed conformation. 
+Below is an example of outputs obtained by predicting PPBS on the Hsp70 protein in close conformation. 
 
 ![](images/example_output.png)
 
@@ -111,11 +111,33 @@ python predict_bindingsites.py 1brs_A
 
 ## Calculating ScanNet filter activities
 
-The activities of the spatio-chemical filters collectively define a amino acid-level representation that can be used as an alternative to handcrafted features such as solvent accessibility, secondary structure, surface convexity,...
+The activities of the spatio-chemical filters collectively define a rich amino acid-level representation that can be used as an alternative to handcrafted features such as solvent accessibility, secondary structure, surface convexity,...
 
 
-This can be done using the predict_features.py function.
+This can be done using the predict_features.py function as follows:
 
+```
+import predict_features
+list_chains = ['2kho', # Hsp70 protein.
+                '2p6b_AB', # Calcineurin.  
+                '1brs_A', # Barnase
+                # '/path/to/my/file.pdb' # Local file.
+                ]
+list_dictionary_features = predict_features.predict_features(list_chains,
+                                            model='ScanNet_PPI_noMSA', # PPBS model without evolution.
+                                            layer='SCAN_filter_activity_aa', # AA-scale spatio-chemical filters
+                                        output_format='dictionary')
+                                  
+print('Residue ID','Features 1-5')      
+for key,item in list(list_dictionary_features[0].items())[:10]:
+    print(key,'%.2f,%.2f,%.2f,%.2f,%.2f'%(item[0],item[1],item[2],item[3],item[4] ) )
+```
+
+Below is an example:
+
+<img src="images/example_features.png" alt="example" width="500"/>
+
+Refer to predict_features.py for other layer choices and output formats. 
 
 
 
@@ -144,11 +166,10 @@ The main stages of train.py are:
 5. Mapping the provided labels onto the pdb chains.  
 6. Training of the network 
 7. Prediction on the test sets.
-8. Drawing the corresponding Precision-recall curves.
+8. Drawing of the Precision-recall curves.
 
 
-Downloading pdb files and preprocessing the data set (without evolutionary information) takes ~7 hours using a single CPU core.  
-Training on a single GPU takes 1-2 hours. Outputs are saved in the plots/ folder.
+Downloading pdb files and preprocessing the data set (without evolutionary information) takes ~7 hours using a single CPU core. Training on a single GPU takes 1-2 hours. Outputs are saved in the plots/ folder.
 
 Set check=True for a quick test.  
 Set train=False to evaluate the network shown in the paper.  
@@ -194,7 +215,7 @@ For simplicity, we used here a Random Forest classifier (implemented in scikit-l
 
 
 ## Contact
-For any question regarding the code, please reach out to
+For any question and comment regarding the code, please reach out to
 jertubiana@gmail.com
 
 

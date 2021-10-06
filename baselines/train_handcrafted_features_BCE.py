@@ -7,6 +7,7 @@ import numpy as np
 import utilities.paths as paths
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
+from utilities.paths import library_folder
 from train import make_PR_curves
 
 if __name__ == '__main__':
@@ -70,8 +71,8 @@ if __name__ == '__main__':
     pipeline = pipelines.HandcraftedFeaturesPipeline(feature_list=feature_list)
 
 
-    list_dataset_locations = ['../datasets/BCE/labels_%s.txt'% dataset for dataset in list_datasets]
-    dataset_table = pd.read_csv('../datasets/BCE/table.csv',sep=',')
+    list_dataset_locations = [library_folder+'datasets/BCE/labels_%s.txt'% dataset for dataset in list_datasets]
+    dataset_table = pd.read_csv(library_folder+'datasets/BCE/table.csv',sep=',')
 
     list_inputs = []
     list_outputs = []
@@ -132,6 +133,7 @@ if __name__ == '__main__':
 
         model.fit(train_inputs, train_outputs,
                   sample_weight=train_weights)
+        model.save(paths.model_folder + model_names[k])
         '''
         Note that here, we use a simple random forest classifier and do not run any hyperparameter search.
         In the paper, we used xgboost and extensive hyperparameter search on the validation set. 

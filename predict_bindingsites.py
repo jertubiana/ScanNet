@@ -72,7 +72,7 @@ def write_predictions(csv_file, residue_ids, sequence, interface_prediction):
     L = len(residue_ids)
     columns = ['Model','Chain','Residue Index','Sequence']
     if interface_prediction.ndim == 1:
-        columns.append('Interface Probability')
+        columns.append('Binding site probability')
     else:
         columns += ['Output %s' %i for i in range(len(interface_prediction) )]
 
@@ -207,7 +207,7 @@ def predict_interface_residues(
         i = 0
         while i < npdbs:
             try:
-                _, chain_objs = PDB_processing.load_chains(
+                _, chain_objs = PDBio.load_chains(
                     chain_ids= query_chain_ids[i], file=pdb_file_locations[i])
 
                 if query_chain_ids[i] == 'all':

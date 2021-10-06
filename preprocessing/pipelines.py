@@ -228,13 +228,13 @@ class Pipeline():
 
             try:
                 pdbfile, chain_ids = PDBio.getPDB(origin, biounit=biounit, structures_folder=structures_folder)
-                struct, chain_objs = PDB_processing.load_chains(file=pdbfile, chain_ids=chain_ids)
+                struct, chain_objs = PDBio.load_chains(file=pdbfile, chain_ids=chain_ids)
 
                 if ('PWM' in self.requirements) | ('conservation' in self.requirements):
                     sequences = [PDB_processing.process_chain(chain_obj)[0] for chain_obj in chain_objs]
                     output_alignments = [MSA_folder + 'MSA_' + '%s_%s_%s' % (
-                    origin.split('/')[-1].split('.')[0], chain_id[0], chain_id[1]) + '.fasta' for chain_id in chain_ids]
-                    MSA_files = [sequence_utils.call_hhblits(sequence, output_alignment) for sequence, output_alignment in
+                    PDBio.parse_str(origin)[0].split('/')[-1].split('.')[0], chain_id[0], chain_id[1]) + '.fasta' for chain_id in chain_ids]
+                    MSA_files = [sequence_utils.call_hhblits(sequence, output_alignment,overwrite=False) for sequence, output_alignment in
                                  zip(sequences, output_alignments)]
                     if len(MSA_files) == 1:
                         MSA_files = MSA_files[0]
@@ -359,6 +359,7 @@ class HandcraftedFeaturesPipeline(Pipeline):
             self.features_dimension += 1
 
         if 'residue_depth' in self.feature_list:
+            print('Residue Depth')
             self.requirements.append('backbone_depth')
             self.requirements.append('sidechain_depth')
             self.feature_names.append('Residue Backbone Depth')
@@ -366,6 +367,7 @@ class HandcraftedFeaturesPipeline(Pipeline):
             self.features_dimension += 2
 
         if 'volume_index' in self.feature_list:
+            print('Volume index')
             self.feature_names += ['Volume Index %s' %
                                    i for i in range(3)]
             self.features_dimension += 3
@@ -379,6 +381,7 @@ class HandcraftedFeaturesPipeline(Pipeline):
             self.features_dimension += 1
 
         if 'coordination' in self.feature_list:
+            print('Coordination')
             self.requirements.append('coordination')
             self.feature_names.append('Coordination')
             self.features_dimension += 1
@@ -459,14 +462,25 @@ class HandcraftedFeaturesPipeline(Pipeline):
             raise ValueError('Missing features and chain not provided')
 
         if missing_features['sequence'] | missing_features['backbone_coordinates'] | missing_features['atomic_coordinates']:
-            sequence, backbone_coordinates, atom_coordinates, _, _ = PDB_processing.process_chain(chain_obj)
+            sequence, backbone_coordinates, atomic_coordinates, _, _ = PDB_processing.process_chain(chain_obj)
 
         if missing_features['secondary_structure'] | missing_features['asa']:
             secondary_structure, accessible_surface_area = PDB_processing.apply_DSSP(chain_obj)
         if missing_features['pwm'] | missing_features['npwm']:
-            if MSA_file is None:
-                raise ValueError('Missing PWM and MSA')
-            PWM = sequence_utils.compute_PWM(MSA_file,Beff=self.Beff)
+            if (MSA_file is not None):
+                if not isinstance(MSA_file,list):
+                    PWM = sequence_utils.compute_PWM(MSA_file, gap_threshold=0.3,
+                                                     neighbours_threshold=0.1, Beff=self.Beff, WT=0, scaled=False)
+                else:
+                    PWM = []
+                    for MSA_file_ in MSA_file:
+                        PWM.append(sequence_utils.compute_PWM(MSA_file_, gap_threshold=0.3,
+                                                 neighbours_threshold=0.1, Beff=self.Beff, WT=0, scaled=False) )
+                    PWM = np.concatenate(PWM,axis=0)
+                # print('Computed MSA, seqlength:%s, MSA_file:%s'%(len(sequence),MSA_file))
+            else:
+                raise ValueError('Missing PWM or MSA')
+
 
         if missing_features['conservation']:
             conservation_score = sequence_utils.conservation_score(PWM,1,Bvirtual=1e-4)
@@ -587,7 +601,7 @@ class ScanNetPipeline(Pipeline):
 
     pdb = '1a3x'
     chains = 'all'
-    struct, chains = PDB_processing.load_chains(pdb_id=pdb ,chain_ids=chains)
+    struct, chains = PDBio.load_chains(pdb_id=pdb ,chain_ids=chains)
 
     pipeline = pipelines.ScanNetPipeline(
                      with_aa=True,

@@ -377,7 +377,7 @@ if __name__ == '__main__':
     pdb = '2kho'
     chain = 'A'
     name = pdblist.retrieve_pdb_file(pdb, pdir=PDB_folder)
-    struct, chains = PDB_processing.load_chains(pdb_id=pdb, chain_ids=[(0, chain)], file=PDB_folder + '%s.cif' % pdb)
+    struct, chains = PDBio.load_chains(pdb_id=pdb, chain_ids=[(0, chain)], file=PDB_folder + '%s.cif' % pdb)
     sequence, backbone_coordinates, atom_coordinates, atom_ids, atom_types = PDB_processing.process_chain(chains)
 
     atom_clouds, atom_triplets, atom_attributes, atom_indices = get_atom_frameCloud(sequence, atom_coordinates,

@@ -44,6 +44,7 @@ class myPDBList(Bio.PDB.PDBList):
         kwargs['pdb'] = structures_folder
         super().__init__(*args,**kwargs)
         self.alphafold_server = 'https://alphafold.ebi.ac.uk/' # entry/Q13469
+        # self.pdb_server = 'ftp://ftp.ebi.ac.uk/pub/databases/pdb/'
         self.flat_tree = True
         return
 
@@ -309,3 +310,54 @@ def extract_chains(location,chains,final_location):
                 io.set_structure(struct)
                 io.save(final_location, ChainSelect(chains))
     return final_location
+
+
+
+
+
+def load_chains(pdb_id=None,
+                         chain_ids='all',
+                         file=None,
+                         pdbparser=None, mmcifparser=None,
+                         structures_folder=structures_folder,
+                         dockground_indexing=False, biounit=True,verbose=True):
+    if pdbparser is None:
+        pdbparser = Bio.PDB.PDBParser()  # PDB parser; to read pdb files.
+    if mmcifparser is None:
+        mmcifparser = Bio.PDB.MMCIFParser()
+
+    assert (file is not None) | (pdb_id is not None)
+
+    if (file is None) & (pdb_id is not None):
+        file = PDBio.getPDB(pdb_id, biounit=biounit, structures_folder=structures_folder)[0]
+    else:
+        pdb_id = 'abcd'
+
+    if file[-4:] == '.cif':
+        parser = mmcifparser
+    else:
+        parser = pdbparser
+    if verbose:
+        print('Parsing %s'%file)
+    with warnings.catch_warnings(record=True) as w:
+        structure = parser.get_structure(pdb_id,  file)
+
+    chain_objs = []
+    if chain_ids in ['all','lower','upper']:
+        for model_obj in structure:
+            for chain_obj in model_obj:
+                condition1 = (chain_ids == 'all')
+                condition2 = ( (chain_ids == 'lower') & chain_obj.id.islower() )
+                condition3 = ( (chain_ids == 'upper') & (chain_obj.id.isupper() | (chain_obj.id == ' ') ) )
+                if condition1 | condition2 | condition3:
+                    chain_objs.append(chain_obj)
+    else:
+        for model, chain in chain_ids:
+            if dockground_indexing & (model > 0):
+                model_ = model - 1
+            else:
+                model_ = model
+
+            chain_obj = structure[model_][chain]
+            chain_objs.append(chain_obj)
+    return structure, chain_objs

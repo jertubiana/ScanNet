@@ -13,7 +13,7 @@ if mode == 'laptop':
     MSA_folder = '/Users/jerometubiana/ScanNet/MSA/' # Where multiple sequence alignments are stored.
     predictions_folder = library_folder + 'predictions/' # Output folder.
     model_folder = library_folder + 'models/' # Where the networks as stored as pairs of files (.h5,.data).
-    pipeline_folder = '/Users/jerometubiana/ScanNet/pipelines/' # Where preprocessed datasets are stored.
+    pipeline_folder = library_folder + 'pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     path2hhblits = None # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     path2sequence_database = None # Path to sequence database Not required if using ScanNet_noMSA networks.
@@ -34,12 +34,12 @@ elif mode == 'laptop_webserver':
 
 
 elif mode == 'tau':
-    library_folder = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/ScanNet/'
+    library_folder = '/home/iscb/wolfson/jeromet/ScanNet/'
     structures_folder = '/specific/netapp5_2/iscb/wolfson/jeromet/Data/PDB_files/' # Where pdb/mmCIF structures files are stored.
     MSA_folder = '/specific/netapp5_2/iscb/wolfson/jeromet/Data/MSA_test/' # Where multiple sequence alignments are stored.
-    predictions_folder = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/interface_predictions/' # Output folder.
-    model_folder = '/specific/netapp5_2/iscb/wolfson/jeromet/Data/InterfacePrediction/models/' # Where the networks as stored as pairs of files (.h5,.data).
-    pipeline_folder = '/Users/jerometubiana/ScanNet/pipelines/' # Where preprocessed datasets are stored.
+    predictions_folder = library_folder+'predictions/' # Output folder.
+    model_folder = library_folder+'models/' # Where the networks as stored as pairs of files (.h5,.data).
+    pipeline_folder = library_folder+'pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     path2hhblits = '/specific/netapp5_2/iscb/wolfson/sequence_database/hh-suite/build/bin/hhblits' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2018_08/uniclust30_2018_08' # Path to sequence database Not required if using ScanNet_noMSA networks.
@@ -47,9 +47,8 @@ elif mode == 'tau':
     path_to_msms = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/msms/msms.x86_64Linux2.2.6.1' # Path to msms binary. Only for reproducing baseline performance.
 
 
-
 elif mode == 'tau_webserver':
-    library_folder = '/specific/a/home/cc/cs/ppdock/webserver/ScanNet/ScanNet/'
+    library_folder = '/specific/netapp5_2/iscb/wolfson/ppdock/ScanNet_webserver/ScanNet/'
     structures_folder = '/specific/netapp5_2/iscb/wolfson/ppdock/Data/PDB/' # Where pdb/mmCIF structures files are stored.
     MSA_folder = '/specific/netapp5_2/iscb/wolfson/ppdock/Data/MSA/' # Where multiple sequence alignments are stored.
     predictions_folder = library_folder + 'predictions/' # Output folder.

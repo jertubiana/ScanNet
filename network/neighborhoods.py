@@ -646,7 +646,7 @@ if __name__ == '__main__':
         pdb = origin[:4]
         chain = origin.split('_')[-1]
         name = pdblist.retrieve_pdb_file(pdb, pdir=PDB_folder)
-        struct, chains = PDB_processing.load_chains(pdb_id=pdb, chain_ids=[(0, chain)], file=PDB_folder + '%s.cif' % pdb)
+        struct, chains = PDBio.load_chains(pdb_id=pdb, chain_ids=[(0, chain)], file=PDB_folder + '%s.cif' % pdb)
         inputs.append(pipeline.process_example(chains))
     inputs = [np.array([input[k] for input in inputs])
               for k in range(len(inputs[0]))]

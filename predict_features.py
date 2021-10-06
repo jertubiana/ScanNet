@@ -10,10 +10,12 @@ def predict_features(list_queries,layer='SCAN_filter_activity_aa',
                      biounit=False,
                      permissive=False):
     '''
-    Usage: list_features = predict_features(list_queries)
+    Usages:
+     list_dictionary_features = predict_features(list_queries,output_format='dictionary')
+     list_features, list_residueids = predict_features(list_queries,output_format='numpy')
     Example: 
     list_queries = ['1a3x_A','2p6b_AB','1a3y']
-    list_features = list of residues-level features, each element of the form Nresidues X Nfeatures.
+    list_dictionary_features = list of residues-level features, each element of the form Nresidues X Nfeatures.
 
     '''
     query_pdbs = []
@@ -54,10 +56,16 @@ def predict_features(list_queries,layer='SCAN_filter_activity_aa',
     )
     if output_format == 'numpy':
         query_pdbs, query_names, query_features, query_residue_ids, query_sequences = query_outputs
-        return query_names, query_features, query_residue_ids
+        if permissive:
+            return query_pdbs,query_features, query_residue_ids
+        else:
+            return query_features, query_residue_ids
     elif output_format == 'dictionary':
         query_pdbs, query_names, query_dictionary_features = query_outputs
-        return query_names,query_dictionary_features
+        if permissive:
+            return query_pdbs,query_dictionary_features
+        else:
+            return query_dictionary_features
 
 
 

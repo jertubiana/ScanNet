@@ -122,6 +122,9 @@ def build_dataset(
                   Beff=500,
                   nchunks=1
                   ):
+    '''
+    Use this function to download PDB files, parse them and cache the calculated files.
+    '''
 
     B = len(list_origins)
     if (list_labels is not None):
@@ -193,7 +196,7 @@ def build_dataset(
         if verbose:
             print('Processing example %s (%s/%s)' % (origin, b, B))
         pdbfile, chain_ids = PDBio.getPDB(origin, biounit=biounit, structures_folder=structures_folder)
-        struct, chain_objs = PDB_processing.load_chains(file=pdbfile, chain_ids=chain_ids)
+        struct, chain_objs = PDBio.load_chains(file=pdbfile, chain_ids=chain_ids)
         sequences = []
         backbone_coordinates = []
         atom_coordinates = []
@@ -284,7 +287,7 @@ if __name__ == '__main__':
     label_resids = list_resids[i]
 
     pdbfile,chain = PDBio.getPDB(origin,biounit=False)
-    structure,chains = PDB_processing.load_chains(file=pdbfile,chain_ids=chain)
+    structure,chains = PDBio.load_chains(file=pdbfile,chain_ids=chain)
     pdb_resids = PDB_processing.get_PDB_indices(chains,return_model=True,return_chain=True)
 
     aligned_labels = align_labels(labels[:50], pdb_resids, label_resids=label_resids[:50], format='sparse')
