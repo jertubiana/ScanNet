@@ -22,9 +22,9 @@ def write_labels(list_origins, list_sequences, list_resids, list_labels, output_
             f.write('>%s\n' % origin)
             for l in range(L):
                 if label.dtype == np.float:
-                    f.write('%s %s %s %.4f\n' % (resids[l, 0], resids[l, 1], sequence[l], label[l]))
+                    f.write('%s %s %s %.4f\n' % (resids[l, -2], resids[l, -1], sequence[l], label[l]))
                 else:
-                    f.write('%s %s %s %s\n' % (resids[l, 0], resids[l, 1], sequence[l], label[l]))
+                    f.write('%s %s %s %s\n' % (resids[l, -2], resids[l, -1], sequence[l], label[l]))
     return output_file
 
 
