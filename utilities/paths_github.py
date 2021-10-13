@@ -21,3 +21,6 @@ initial_values_folder = model_folder + 'initial_values/' # Where initial values 
 # Additional paths for reproducing baselines.
 path_to_dssp = '/path/to/mkdssp' # Path to dssp binary. Only for reproducing handcrafted features baseline performance.
 path_to_msms = '/path/to/msms.x86_64Linux2.2.6.1' # Path to msms binary. Only for reproducing handcrafted features baseline performance.
+
+path_to_multiprot = '/path/to/multiprot.Linux'  # Path to multiprot executable. Only relevant for homology baseline.
+homology_folder = library_folder + 'homology/'  # Where files are stored for homology baseline.

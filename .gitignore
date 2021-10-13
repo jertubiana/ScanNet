@@ -113,14 +113,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
 # Local files.
 predictions/
 plots/
 pipelines/
 PDB/
 MSA/
-
+baselines/homology/
 # Pycharm
 .idea/
 
@@ -128,3 +127,6 @@ MSA/
 .DS_Store
 
 models/initial_values/*
+models/*retrained*
+models/*check*
+models/*handcrafted*
