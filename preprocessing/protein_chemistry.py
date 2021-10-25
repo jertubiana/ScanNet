@@ -78,11 +78,13 @@ residue_dictionary = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K'
                       'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M',
                       'MSE': 'M',
                       'PTR':'Y',
+                      'TYS':'Y',
                       'SEP':'S',
                       'TPO':'T',
                       'HIP':'H',
-                      'MSE':'M'
 }
+
+hetresidue_field = [' '] + ['H_%s'%name for name in residue_dictionary.keys()]
 
 aa_to_index = dict([(list_aa[i],i) for i in range(20)])
 

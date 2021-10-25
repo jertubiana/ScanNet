@@ -9,14 +9,14 @@ from Bio.PDB.ResidueDepth import _read_vertex_array, _get_atom_radius
 import tempfile
 from utilities.paths import structures_folder,path_to_dssp,path_to_msms
 from preprocessing.protein_chemistry import list_atoms,list_atoms_types,VanDerWaalsRadii,atom_mass,atom_type_to_index,atom_to_index,index_to_type,atom_type_mass
-from preprocessing.protein_chemistry import residue_dictionary
+from preprocessing.protein_chemistry import residue_dictionary,hetresidue_field
 from preprocessing import PDBio
 
 #%% Functions for parsing PDB files.
 
 def is_residue(residue):
     try:
-        return (residue.get_id()[0] == ' ') & (residue.resname in residue_dictionary.keys())
+        return (residue.get_id()[0] in hetresidue_field) & (residue.resname in residue_dictionary.keys())
     except:
         return False
 
@@ -24,7 +24,7 @@ def is_residue(residue):
 def is_heavy_atom(atom):
     # Second condition for Rosetta-generated files.
     try:
-        return (atom.get_id()[0] in atom_type_to_index.keys()) & (atom.get_id() != 'CEN')
+        return (atom.get_id() in atom_to_index.keys() )
     except:
         return False
 
@@ -57,9 +57,9 @@ def process_chain(chain):
             residue_atom_coordinates = np.array(
                 [atom.get_coord() for atom in residue if is_heavy_atom(atom)])
             residue_atoms = [atom_to_index[atom.get_id()]
-                             for atom in residue if is_heavy_atom(atom)]
+                             for atom in residue if is_heavy_atom(atom)  ]
             residue_atom_type = [atom_type_to_index[atom.get_id()[0]]
-                                 for atom in residue if is_heavy_atom(atom)]
+                                 for atom in residue if is_heavy_atom(atom) ]
             residue_backbone_coordinates = []
             for atom in ['N', 'C', 'CA', 'O', 'CB']:
                 try:
