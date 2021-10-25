@@ -164,10 +164,10 @@ class HomologyModel():
         self.template_origins, self.template_sequences, self.template_resids, self.template_labels = [],[],[],[]
         for template_labels_file_ in template_labels_file:
             template_origins, template_sequences, template_resids, template_labels = dataset_utils.read_labels(template_labels_file_)
-            self.template_origins += template_origins
-            self.template_sequences += template_sequences
-            self.template_resids += template_resids
-            self.template_labels += template_labels
+            self.template_origins += list(template_origins)
+            self.template_sequences += list(template_sequences)
+            self.template_resids += list(template_resids)
+            self.template_labels += list(template_labels)
 
         self.template_pdbs = [self.cache_folder + template_origin + '.pdb' for template_origin in self.template_origins]
         for template_origin,template_pdb in zip(self.template_origins,self.template_pdbs):
@@ -217,10 +217,10 @@ class HomologyModel():
                 train_sequences_ = train_sequences_[:nexamples_max//nfiles]
                 train_resids_ = train_resids_[:nexamples_max//nfiles]
                 train_labels_ = train_labels_[:nexamples_max//nfiles]
-            train_origins += train_origins_
-            train_sequences += train_sequences_
-            train_resids += train_resids_
-            train_labels += train_labels_
+            train_origins += list(train_origins_)
+            train_sequences += list(train_sequences_)
+            train_resids += list(train_resids_)
+            train_labels += list(train_labels_)
         train_pdbs = [self.cache_folder + train_origin + '.pdb' for train_origin in train_origins]
         for train_origin,train_pdb in zip(train_origins,train_pdbs):
             if not os.path.exists(train_pdb):

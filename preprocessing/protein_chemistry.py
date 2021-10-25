@@ -5,11 +5,7 @@ from numba.typed import List,Dict
 
 
 
-residue_dictionary = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
-                      'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
-                      'GLY': 'G', 'HIS': 'H', 'HSD':'H','HSE':'H',
-                      'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-                      'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M', 'MSE': 'M'}
+
 
 
 
@@ -77,8 +73,16 @@ list_aa = [
 
 residue_dictionary = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
                       'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
-                      'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-                      'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M', 'MSE': 'M'}
+                      'GLY': 'G', 'HIS': 'H', 'HSD':'H','HSE':'H',
+                      'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+                      'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M',
+                      'MSE': 'M',
+                      'PTR':'Y',
+                      'SEP':'S',
+                      'TPO':'T',
+                      'HIP':'H',
+                      'MSE':'M'
+}
 
 aa_to_index = dict([(list_aa[i],i) for i in range(20)])
 

@@ -329,7 +329,7 @@ def load_chains(pdb_id=None,
     assert (file is not None) | (pdb_id is not None)
 
     if (file is None) & (pdb_id is not None):
-        file = PDBio.getPDB(pdb_id, biounit=biounit, structures_folder=structures_folder)[0]
+        file = getPDB(pdb_id, biounit=biounit, structures_folder=structures_folder)[0]
     else:
         pdb_id = 'abcd'
 
