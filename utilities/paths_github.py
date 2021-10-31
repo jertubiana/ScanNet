@@ -1,8 +1,8 @@
 # List of paths to folders and binaries. All folder paths should finish with slash (/)
 
 # Paths required for prediction.
-library_folder = '/path/to/ScanNet/' # Where the Github Repo is located.
-structures_folder = '/path/to/PDB/' # Where pdb/mmCIF structures files are stored.
+library_folder = '' # Where the Github Repo is located.
+structures_folder = library_folder + 'PDB/' # Where pdb/mmCIF structures files are stored.
 predictions_folder = library_folder + 'predictions/' # Output folder.
 model_folder = library_folder + 'models/' # Where the networks as stored as pairs of files (.h5,.data).
 

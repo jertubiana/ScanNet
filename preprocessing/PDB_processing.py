@@ -11,7 +11,7 @@ from utilities.paths import structures_folder,path_to_dssp,path_to_msms
 from preprocessing.protein_chemistry import list_atoms,list_atoms_types,VanDerWaalsRadii,atom_mass,atom_type_to_index,atom_to_index,index_to_type,atom_type_mass
 from preprocessing.protein_chemistry import residue_dictionary,hetresidue_field
 from preprocessing import PDBio
-
+from datetime import datetime
 #%% Functions for parsing PDB files.
 
 def is_residue(residue):
@@ -268,9 +268,9 @@ def apply_DSSP(chain_obj, pdbparser=None, io=None, path_to_dssp=path_to_dssp):
         for atom in residue:
             atom.disordered_flag = 0
 
+    hash = str(datetime.now())[-6:]
     name = 'tmp_' + pdb_id + \
-        '_model_%s_chain_%s' % (model, chain) + '.pdb'
-
+        '_model_%s_chain_%s' % (model, chain) + '_'+hash + '.pdb'
 
 
     io.save(name)

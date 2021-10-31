@@ -331,7 +331,7 @@ def load_chains(pdb_id=None,
     if (file is None) & (pdb_id is not None):
         file = getPDB(pdb_id, biounit=biounit, structures_folder=structures_folder)[0]
     else:
-        pdb_id = 'abcd'
+        pdb_id = file.split('/')[-1].split('.')[0][-4:]
 
     if file[-4:] == '.cif':
         parser = mmcifparser
