@@ -48,7 +48,7 @@ elif mode == 'tau':
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
     path2hhblits = '/specific/netapp5_2/iscb/wolfson/sequence_database/hh-suite/build/bin/hhblits' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     # path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2018_08/uniclust30_2018_08' # Path to sequence database Not required if using ScanNet_noMSA networks.
-    path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/uniclust30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.
+    path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/UniRef30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.
     path_to_dssp = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/xssp-3.0.9/mkdssp' # Path to dssp binary. Only for reproducing baseline performance.
     path_to_msms = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/msms/msms.x86_64Linux2.2.6.1' # Path to msms binary. Only for reproducing baseline performance.
     path_to_multiprot = '/home/iscb/wolfson/jeromet/MultiProt/multiprot.Linux' # Path to multiprot executable. Only relevant for homology baseline
@@ -65,7 +65,7 @@ elif mode == 'tau_webserver':
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
     path2hhblits = '/specific/netapp5_2/iscb/wolfson/sequence_database/hh-suite/build/bin/hhblits' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     # path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2018_08/uniclust30_2018_08' # Path to sequence database Not required if using ScanNet_noMSA networks.
-    path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/uniclust30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.
+    path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/UniRef30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.
     path_to_dssp = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/xssp-3.0.9/mkdssp' # Path to dssp binary. Only for reproducing baseline performance.
     path_to_msms = '/specific/a/home/cc/students/cs/jeromet/Drive/Scripts/3D_Proteins/msms/msms.x86_64Linux2.2.6.1' # Path to msms binary. Only for reproducing baseline performance.
     path_to_multiprot = None # Path to multiprot executable. Only relevant for homology baseline
