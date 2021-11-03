@@ -216,7 +216,7 @@ def call_hhblits(sequence, output_alignment, path2hhblits=path2hhblits, path2seq
         if os.path.exists(output_alignment) & os.path.exists(output_file):
             print('File %s already exists. Not recomputing' %
                   output_alignment)
-            return 0
+            return output_alignment
     if MSA is not None:
         os.system('scp %s %s'%(MSA,query_file))
     else:
