@@ -6,8 +6,10 @@ import pandas as pd
 import numpy as np
 import utilities.paths as paths
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.optimizers import Adam
 import os
 from train import make_PR_curves
+
 
 if __name__ == '__main__':
     '''
@@ -154,6 +156,9 @@ if __name__ == '__main__':
         if train:
             #%% Load initial model.
             model = wrappers.load_model(paths.model_folder + root_model_name, Lmax=Lmax_aa)
+            optimizer = Adam(lr=1e-4, beta_2=0.99, epsilon=1e-4)
+            model.model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
+                'categorical_crossentropy', 'categorical_accuracy']),  # Recompile model with an optimizer with lower learning rate.
             extra_params = {'batch_size':1,'epochs':epochs_max}
 
             # %% Train!

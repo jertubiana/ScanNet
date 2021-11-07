@@ -143,7 +143,6 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
             f.write("runCommand('open %s')\n" % output_file.split('/')[-1])
             list_chains = [x.split('_') for x in
                            np.unique([str(resids[u, 0]) + '_' + str(resids[u, 1]) for u in range(len(resids))])]
-            print(list_chains)
             for chain in list_chains:
                 f.write("runCommand('rangecolor bfactor key %s blue %s yellow %s red #0.%s:.%s')\n" % (
                 mini, (mini + maxi) / 2, maxi, int(chain[0]) + add_one, chain[1]))
@@ -160,7 +159,6 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
             f.write('color gray transparency 10\n')
             list_chains = [x.split('_') for x in
                            np.unique([str(resids[u, 0]) + '_' + str(resids[u, 1]) for u in range(len(resids))])]
-            print(list_chains)
 
             for chain in list_chains:
                 if multimodel:

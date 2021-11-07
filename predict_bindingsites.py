@@ -419,7 +419,10 @@ def predict_interface_residues(
                         model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(l).output)
                     model_obj.model = model_truncated
         else:
-            model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(layer).output)
+            if layer == 'attention_layer':
+                model_truncated = Model(inputs=model_obj.model.inputs, outputs=model_obj.model.get_layer(layer).output[1])
+            else:
+                model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(layer).output)
             model_obj.model = model_truncated
         return_all = True
     else:
@@ -459,6 +462,47 @@ def predict_interface_residues(
         if padded:
             query_predictions = wrappers.truncate_list_of_arrays(
                 query_predictions, assembly_lengths)
+
+        has_attention_layer = False
+        if layer == 'attention_layer':
+            has_attention_layer = True
+        elif isinstance(layer,list):
+            has_attention_layer = 'attention_layer' in layer
+
+        if has_attention_layer:
+            '''
+            Output the aggregated attention coefficient for each node (= node importance, potential hotspot detector).
+            1. Recompute, for each aa, the indices of its K neighbors using Calpha coordinates.
+            2. Compute the degree of each aa by summing its contribution to all other amino acids.
+            3. Put back into predictions.
+            '''
+            calpha_coordinates = [inputs[3][n].astype(np.float32)[inputs[0][n].astype(np.int)[..., 0]] for n in range(len(inputs[0]))]
+            K_graph = model_obj.kwargs['K_graph']
+            neighborhood_graphs = [np.argsort(PDB_processing.distance(calpha_coordinate,calpha_coordinate), axis=1)[:,:K_graph] for calpha_coordinate in calpha_coordinates]
+            if layer == 'attention_layer':
+                attention_coeffs = query_predictions
+            else:
+                index = layer.index('attention_layer')
+                attention_coeffs = [prediction[index] for prediction in query_predictions]
+
+            aggregated_attention_coeffs = []
+            sign = np.sign(attention_coeffs[0][:, 0, 0]).mean()
+            if sign<0:
+                print('Warning, attention coeffs are flipped')
+            for attention_coeff,neighborhood_graph in zip(attention_coeffs,neighborhood_graphs):
+                aggregated_attention_coeff = np.zeros(len(attention_coeff),dtype=np.float32)
+                for s in range( len(attention_coeff) ):
+                    aggregated_attention_coeff[neighborhood_graph[s]] += np.maximum(sign*attention_coeff[s],0).mean(
+                        -1)  # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
+                    # aggregated_attention_coeff[neighborhood_graph[s]] += np.abs(attention_coeff[s]).mean(-1) # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
+                aggregated_attention_coeffs.append(aggregated_attention_coeff)
+            aggregated_attention_coeffs = np.array(aggregated_attention_coeffs)
+            if layer == 'attention_layer':
+                query_predictions = aggregated_attention_coeffs
+            else:
+                for query_prediction,aggregated_attention_coeff in zip(query_predictions,aggregated_attention_coeffs):
+                    query_prediction[index] = aggregated_attention_coeff
+
 
     else:
         query_predictions = []
@@ -505,11 +549,14 @@ def predict_interface_residues(
                     index = layer.index('attention_layer')
                     attention_coeffs = predictions[index]
 
+                sign = np.sign(attention_coeffs[0][:, 0, 0]).mean()
+                if sign < 0:
+                    print('Warning, attention coeffs are flipped')
                 aggregated_attention_coeffs = []
                 for attention_coeff,neighborhood_graph in zip(attention_coeffs,neighborhood_graphs):
                     aggregated_attention_coeff = np.zeros(len(attention_coeff),dtype=np.float32)
                     for s in range( len(attention_coeff) ):
-                        aggregated_attention_coeff[neighborhood_graph[s]] += np.abs(attention_coeff[s]).mean(-1) # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
+                        aggregated_attention_coeff[neighborhood_graph[s]] += np.maximum(sign*attention_coeff[s],0).mean(-1) # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
                     aggregated_attention_coeffs.append(aggregated_attention_coeff)
                 aggregated_attention_coeffs = np.array(aggregated_attention_coeffs)
                 if layer == 'attention_layer':
