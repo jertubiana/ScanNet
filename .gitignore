@@ -133,3 +133,5 @@ models/*handcrafted*
 
 data/pdb/*.txt
 data/tmp/*
+predictions/.DS_Store
+.DS_Store
