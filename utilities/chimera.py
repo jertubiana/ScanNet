@@ -83,13 +83,13 @@ def show_binding_sites(
 
 
 
-def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,maxi=0.8,version='default'):
+def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,maxi=0.8,version='default', field = 'Binding site probability'):
     '''
     rangecolor bfactor key 0.0 blue 0.2 yellow 0.4 red
     '''
     interface_predictions = pd.read_csv(csv_file, sep=',')
     resids = ['%s_%s_%s'%(x,y,z) for x,y,z in np.array(interface_predictions[['Model','Chain','Residue Index']]) ]
-    probas = np.array(interface_predictions['Binding site probability'])
+    probas = np.array(interface_predictions[field])
     model = -1
     multimodel = False
     is_cif = pdb_file[-4:] == '.cif'

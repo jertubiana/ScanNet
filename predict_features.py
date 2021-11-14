@@ -7,6 +7,7 @@ from utilities.paths import model_folder,structures_folder,MSA_folder
 def predict_features(list_queries,layer='SCAN_filter_activity_aa',
                      model='ScanNet_PPI_noMSA',
                      output_format='dictionary',
+                     model_folder=model_folder,
                      biounit=False,
                      permissive=False):
     '''
