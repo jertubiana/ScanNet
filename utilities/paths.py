@@ -16,6 +16,7 @@ if mode == 'laptop':
     pipeline_folder = library_folder + 'pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
+    visualization_folder = library_folder + 'visualizations/'
     path2hhblits = None # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     path2sequence_database = None # Path to sequence database Not required if using ScanNet_noMSA networks.
     path_to_dssp = '/Users/jerometubiana/Google\ Drive/Scripts/3D_Proteins/xssp-3.0.8/mkdssp' # Path to dssp binary. Only for reproducing baseline performance.
@@ -31,6 +32,7 @@ elif mode == 'laptop_webserver':
     pipeline_folder = library_folder + 'pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
+    visualization_folder = library_folder + 'visualizations/'
     path2hhblits = 'null' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     path2sequence_database = 'null' # Path to sequence database Not required if using ScanNet_noMSA networks.
     path_to_dssp = '/Users/jerometubiana/Google\ Drive/Scripts/3D_Proteins/xssp-3.0.8/mkdssp' # Path to dssp binary. Only for reproducing baseline performance.
@@ -46,6 +48,7 @@ elif mode == 'tau':
     pipeline_folder = library_folder+'pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
+    visualization_folder = library_folder + 'visualizations/'
     path2hhblits = '/specific/netapp5_2/iscb/wolfson/sequence_database/hh-suite/build/bin/hhblits' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     # path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2018_08/uniclust30_2018_08' # Path to sequence database Not required if using ScanNet_noMSA networks.
     path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/UniRef30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.
@@ -63,6 +66,7 @@ elif mode == 'tau_webserver':
     pipeline_folder = '/specific/netapp5_2/iscb/wolfson/ppdock/Data/pipelines/' # Where preprocessed datasets are stored.
     initial_values_folder = model_folder + 'initial_values/' # Where initial values of the parameters for the gaussian kernels and residue-residue graph edges are stored.
     homology_folder = library_folder + 'baselines/homology/' # Where files are stored for homology baseline.
+    visualization_folder = library_folder + 'visualizations/'
     path2hhblits = '/specific/netapp5_2/iscb/wolfson/sequence_database/hh-suite/build/bin/hhblits' # Path to hhblits binary. Not required if using ScanNet_noMSA networks.
     # path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2018_08/uniclust30_2018_08' # Path to sequence database Not required if using ScanNet_noMSA networks.
     path2sequence_database = '/specific/netapp5_2/iscb/wolfson/sequence_database/uniclust30_2020_06/UniRef30_2020_06' # Path to sequence database Not required if using ScanNet_noMSA networks.

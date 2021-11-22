@@ -376,7 +376,8 @@ def complex_filter_logo(aa_probability,
                         top = 1.0,      # the top of the subplots of the figure
                         wspace = 0.00,   # the amount of width reserved for blank space between subplots
                         hspace = 0.2)   # the amount of height reserved for white space between subplots
-
+    if nplots == 1:
+        ax = [ax]
 
     count = 0
     categories_logo(aa_probability, 'aa', ax=ax[count], scaling=scaling_, multiplier=scaling, orientation='+')
@@ -474,6 +475,7 @@ def show_ellipsoids(list_ellipsoids=[(np.zeros(3), np.eye(3))],
                     list_figures=None,
                     list_texts=None,
                     list_segments = None,
+                    list_additional_objects = [],
                     level=1.0, sg=None,
                     wireframe=True,
                     show_frame=True,
@@ -607,6 +609,8 @@ def show_ellipsoids(list_ellipsoids=[(np.zeros(3), np.eye(3))],
         m = pythreejs.LineMaterial(linewidth=2.5, vertexColors='VertexColors')
         segments = pythreejs.LineSegments2(g, m)
         children.append(segments)
+
+    children += list_additional_objects
 
     scene = pythreejs.Scene(children=children)
     renderer = pythreejs.Renderer(camera=camera, scene=scene, controls=[controller],

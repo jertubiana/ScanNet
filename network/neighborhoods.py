@@ -435,7 +435,7 @@ def get_LocalNeighborhood(inputs,neighborhood_params,flat=False,n_samples=100,pa
 
         ]
         if attributes is not None:
-            attributes = np.stack([padd_matrix(attribute,Lmax=Lmaxs[0],padding_value=0.) for attribute in attributes[:b]],
+            attributes = np.stack([padd_matrix(attribute,Lmax=Lmaxs[-1],padding_value=0.) for attribute in attributes[:b]],
                                   axis=0)
     if attributes is not None:
         inputs.append(attributes)

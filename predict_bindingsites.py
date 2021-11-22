@@ -494,7 +494,7 @@ def predict_interface_residues(
                 for s in range( len(attention_coeff) ):
                     aggregated_attention_coeff[neighborhood_graph[s]] += np.maximum(sign*attention_coeff[s][:len(neighborhood_graph[s])],0).mean(
                         -1)  # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
-                    # aggregated_attention_coeff[neighborhood_graph[s]] += np.abs(attention_coeff[s]).mean(-1) # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
+                    # aggregated_attention_coeff[neighborhood_graph[s]] += np.abs(attention_coeff[s][:len(neighborhood_graph[s])]).mean(1)  # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
                 aggregated_attention_coeffs.append(aggregated_attention_coeff)
             aggregated_attention_coeffs = np.array(aggregated_attention_coeffs)
             if layer == 'attention_layer':
@@ -557,6 +557,7 @@ def predict_interface_residues(
                     aggregated_attention_coeff = np.zeros(len(attention_coeff),dtype=np.float32)
                     for s in range( len(attention_coeff) ):
                         aggregated_attention_coeff[neighborhood_graph[s]] += np.maximum(sign*attention_coeff[s][:len(neighborhood_graph[s])],0).mean(-1) # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
+                        # aggregated_attention_coeff[neighborhood_graph[s]] += np.abs(attention_coeff[s][:len(neighborhood_graph[s])] ).mean(-1)  # Attention coefficient has size [N_aa,K_graph,nheads]. average over heads.
                     aggregated_attention_coeffs.append(aggregated_attention_coeff)
                 aggregated_attention_coeffs = np.array(aggregated_attention_coeffs)
                 if layer == 'attention_layer':
@@ -620,12 +621,18 @@ def predict_interface_residues(
                         chimera_file = query_output_folder + 'chimera_%s'%layer_ + query_names[i]
                         annotated_pdb_file = query_output_folder + 'annotated_%s'%layer_ + query_names[i] + ('.cif' if file_is_cif else '.pdb')
                     write_predictions(csv_file, res_ids,sequence, prediction)
-                    if predict_from_pdb:
+                    if predict_from_pdb & (prediction.ndim == 1):
                         if output_chimera == 'script':
                             chimera.show_binding_sites(
                                 query_pdbs[i], csv_file, chimera_file, biounit=biounit, directory='',thresholds=chimera_thresholds)
                         elif output_chimera == 'annotation':
-                            chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=0.0, maxi=chimera_thresholds[-1])
+                            if layer_ == 'attention_layer':
+                                mini = 0.5
+                                maxi = 2.5
+                            else:
+                                mini = 0
+                                maxi = chimera_thresholds[-1]
+                            chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi)
             else:
                 if layer is None:
                     csv_file = query_output_folder + 'predictions_' + query_name + '.csv'
@@ -636,12 +643,19 @@ def predict_interface_residues(
                     chimera_file = query_output_folder + 'chimera_%s' % layer + query_names[i]
                     annotated_pdb_file = query_output_folder + 'annotated_%s' % layer + query_names[i] + ('.cif' if file_is_cif else '.pdb')
                 write_predictions(csv_file, res_ids, sequence, predictions)
-                if predict_from_pdb:
+                if predict_from_pdb & (predictions.ndim == 1):
                     if output_chimera == 'script':
                         chimera.show_binding_sites(
                             query_pdbs[i], csv_file, chimera_file, biounit=biounit, directory='',thresholds=chimera_thresholds)
                     elif output_chimera == 'annotation':
-                        chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=0.0, maxi=chimera_thresholds[-1])
+                        if layer == 'attention_layer':
+                            mini = 0.5
+                            maxi = 2.5
+                        else:
+                            mini = 0
+                            maxi = chimera_thresholds[-1]
+
+                        chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi)
 
     if output_format == 'dictionary':
         query_dictionary_predictions = [PDB_processing.make_values_dictionary(query_residue_id,query_prediction) for query_residue_id,query_prediction in zip(query_residue_ids,query_predictions)]

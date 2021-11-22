@@ -19,6 +19,12 @@ def predict_features(list_queries,layer='SCAN_filter_activity_aa',
     list_dictionary_features = list of residues-level features, each element of the form Nresidues X Nfeatures.
 
     '''
+    if not isinstance(list_queries,list):
+        list_queries = [list_queries]
+        return_one = True
+        permissive = False
+    else:
+        return_one = False
     query_pdbs = []
     query_chain_ids = []
     nlayers = len(layer) if isinstance(layer,list) else 1
@@ -57,12 +63,22 @@ def predict_features(list_queries,layer='SCAN_filter_activity_aa',
     )
     if output_format == 'numpy':
         query_pdbs, query_names, query_features, query_residue_ids, query_sequences = query_outputs
+        if return_one:
+            query_pdbs = query_pdbs[0]
+            query_names = query_names[0]
+            query_features = query_features[0]
+            query_residue_ids = query_residue_ids[0]
+            query_sequences = query_sequences[0]
         if permissive:
             return query_pdbs,query_features, query_residue_ids
         else:
             return query_features, query_residue_ids
     elif output_format == 'dictionary':
         query_pdbs, query_names, query_dictionary_features = query_outputs
+        if return_one:
+            query_pdbs = query_pdbs[0]
+            query_names = query_names[0]
+            query_dictionary_features = query_dictionary_features[0]
         if permissive:
             return query_pdbs,query_dictionary_features
         else:
