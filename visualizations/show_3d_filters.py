@@ -7,7 +7,7 @@ import os
 from keras.models import Model
 import matplotlib
 
-from preprocessing import PDBio,PDB_processing,pipelines
+from preprocessing import PDBio,PDB_processing,pipelines,protein_chemistry
 from network import neighborhoods
 import numpy as np
 
@@ -280,70 +280,7 @@ def calculate_filter_specificities(model_name,
 
 
 
-def get_neighborhood(
-        pdb = '1a3x',
-        model = 0,
-        chain = 'A',
-        resnumber = 1,
-        assembly=False,
-        biounit=True,
-        Kmax = 64
-
-):
-    filename,_ = PDBio.getPDB(pdb,biounit=biounit)
-    if assembly == True:
-        chain_ids = 'all'
-    elif isinstance(assembly,list):
-        chain_ids = assembly
-    else:
-        chain_ids = [(model,chain)]
-    struct, chains = PDBio.load_chains(file=filename,chain_ids=chain_ids)
-    pipeline = pipelines.ScanNetPipeline(aa_features='sequence',
-                                         atom_features='type'
-                                         )
-    [aa_triplets, aa_attributes,aa_indices,aa_clouds,
-     atom_triplets, atom_attributes, atom_indices, atom_clouds],_ = pipeline.process_example(chains)
-
-    aa_frames = neighborhoods.get_Frames(
-        [[aa_triplets],[aa_clouds]], order='2')
-
-
-    _, atom_types =  neighborhoods.get_LocalNeighborhood([ [aa_frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_attributes[atom_triplets[:,0]]],
-                                        )
-    atom_positions, atom_triplets =  neighborhoods.get_LocalNeighborhood([ [aa_frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_triplets],
-                                        )
-
-    atom_types = atom_types.astype(np.int)
-    atom_triplets = atom_triplets.astype(np.int)
-
-
-
-
-
-    resids = PDB_processing.get_PDB_indices(chains,return_chain=True,return_model=True)
-
-    index = np.nonzero( (resids[:,0].astype(np.int) == model) & (resids[:,1]==chain) & (resids[:,2].astype(np.int)==resnumber) )[0][0]
-
-    atom_positions = atom_positions[0][index]
-    atom_types = atom_types[0][index]
-    atom_triplets = atom_triplets[0][index]
-    atom_index = list(atom_triplets[:,0])
-    atom_bonds = np.zeros([Kmax,Kmax],dtype=np.bool)
-
-    for triplet in atom_triplets:
-        if triplet[1] in atom_index:
-            atom_bonds[atom_index.index(triplet[0]),atom_index.index(triplet[1])] = 1
-        if triplet[2] in atom_index:
-            atom_bonds[atom_index.index(triplet[0]),atom_index.index(triplet[2])] = 1
-    atom_bonds += atom_bonds.T
-    atom_bonds = list(zip(*np.nonzero(atom_bonds) ) )
-    atom_bonds = [(i,j) for i,j in atom_bonds if j>i]
-    return atom_positions,atom_types-1,atom_bonds
-
-
-
-
-def plot_atomic_filter(filter_specificities, index, threshold1=0.33, threshold2=0.25, sg=None,camera_position=None):
+def plot_atomic_filter(filter_specificities, index, threshold1=0.33, threshold2=0.25,y_offset=0,list_additional_objects = [], sg=None,camera_position=None):
     if camera_position is None:
         camera_position = [0.8, 0.5, 0.8]
 
@@ -395,7 +332,8 @@ def plot_atomic_filter(filter_specificities, index, threshold1=0.33, threshold2=
                                           show_frame=True,
                                           fs=1.,
                                           scale=2.0,
-                                          offset=[0, 0, 0],
+                                          offset=[0, y_offset, 0],
+                                          list_additional_objects=list_additional_objects,
                                           camera_position=camera_position,
                                           key_light_position=[0.5, 1, 0],
                                           maxi=5)

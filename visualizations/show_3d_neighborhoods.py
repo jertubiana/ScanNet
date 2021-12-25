@@ -1,6 +1,6 @@
 import pythreejs
 import numpy as np
-from preprocessing import PDBio,PDB_processing,pipelines
+from preprocessing import PDBio,PDB_processing,pipelines,protein_chemistry
 from network import neighborhoods
 
 def rgb_to_hex(rgb):
@@ -37,7 +37,7 @@ def show_atoms(
         atom_bonds,
         render=True,
         radius_scale=0.2,
-        stick_radius=0.15,
+        stick_radius=0.75,
         stick_height=0.8,
         camera_position=[0.8, 0.5, 0.8],
         key_light_position=[0.5, 1, 0.0]
@@ -78,8 +78,8 @@ def show_atoms(
         children = []
 
     sphere_geometry = [pythreejs.SphereGeometry(radius=radius_scale * radius) for radius in VanDerWaalsRadii]
-    stick_geometry = pythreejs.CylinderGeometry(radiusTop=stick_radius,
-                                                radiusBottom=stick_radius,
+    stick_geometry = pythreejs.CylinderGeometry(radiusTop=radius_scale *stick_radius,
+                                                radiusBottom=radius_scale *stick_radius,
                                                 height=stick_height)
 
     list_spheres = [
@@ -131,12 +131,21 @@ def get_neighborhood(
         model = 0,
         chain = 'A',
         resnumber = 1,
+        atom = None,
         resindex = None,
+        atomindex= None,
         assembly=False,
         biounit=True,
-        Kmax = 64
+        Kmax = None
 
 ):
+    if Kmax is None:
+        if (atom is not None) | (atomindex is not None):
+            Kmax = 32
+        else:
+            Kmax = 16*9
+
+
     filename,_ = PDBio.getPDB(pdb,biounit=biounit)
     if assembly == True:
         chain_ids = 'all'
@@ -146,37 +155,64 @@ def get_neighborhood(
         chain_ids = [(model,chain)]
     struct, chains = PDBio.load_chains(file=filename,chain_ids=chain_ids)
     pipeline = pipelines.ScanNetPipeline(aa_features='sequence',
-                                         atom_features='type'
+                                         atom_features='id'
                                          )
+
     [aa_triplets, aa_attributes,aa_indices,aa_clouds,
-     atom_triplets, atom_attributes, atom_indices, atom_clouds],_ = pipeline.process_example(chains)
+     atom_triplets, atom_ids, atom_indices, atom_clouds],_ = pipeline.process_example(chains)
+    atom_ids -=1
+    atom_attributes = protein_chemistry.index_to_type[atom_ids]+1
 
-    aa_frames = neighborhoods.get_Frames(
-        [[aa_triplets],[aa_clouds]], order='2')
+
+    resids = PDB_processing.get_PDB_indices(chains,return_chain=True,return_model=True)
+
+    if (atom is not None) | (atomindex is not None):
+        if (atomindex is not None):
+            index = atomindex
+        else:
+            try:
+                index = np.nonzero(
+                                   (resids[atom_indices[:,0], 0].astype(np.int) == model) &
+                                   (resids[atom_indices[:,0], 1] == chain) &
+                                   (resids[atom_indices[:,0], 2].astype(np.int) == resnumber) &
+                                   (atom_ids == protein_chemistry.atom_to_index[atom])
+                                   )[0][0]
+            except:
+                raise ValueError('Atom #%s/%s:%s@%s not found' % (model,chain,resnumber,atom) )
+    else:
+        if resindex is not None:
+            index = resindex
+        else:
+            try:
+                index = np.nonzero( (resids[:,0].astype(np.int) == model) &
+                                    (resids[:,1]==chain) &
+                                    (resids[:,2].astype(np.int)==resnumber)
+                                    )[0][0]
+            except:
+                raise ValueError('Residue #%s/%s:%s not found' % (model, chain, resnumber))
 
 
-    _, atom_types =  neighborhoods.get_LocalNeighborhood([ [aa_frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_attributes[atom_triplets[:,0]]],
+    if (atom is not None) | (atomindex is not None):
+        frames = neighborhoods.get_Frames(
+            [[atom_triplets[index:index+1]],[atom_clouds]], order='2')
+    else:
+        frames = neighborhoods.get_Frames(
+            [[aa_triplets[index:index+1]],[aa_clouds]], order='2')
+
+
+    _, atom_types =  neighborhoods.get_LocalNeighborhood([ [frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_attributes],
                                         )
-    atom_positions, atom_triplets =  neighborhoods.get_LocalNeighborhood([ [aa_frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_triplets],
+    atom_positions, atom_triplets =  neighborhoods.get_LocalNeighborhood([ [frames[0]], [atom_clouds[atom_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [atom_triplets],
                                         )
 
     atom_types = atom_types.astype(np.int)
     atom_triplets = atom_triplets.astype(np.int)
 
 
+    atom_positions = atom_positions[0][0]
+    atom_types = atom_types[0][0] -1 # Inside the code, atom_type = 0 corresponds to virtual atom or empty placeholder.
+    atom_triplets = atom_triplets[0][0]
 
-
-
-    resids = PDB_processing.get_PDB_indices(chains,return_chain=True,return_model=True)
-
-    if resindex is not None:
-        index = resindex
-    else:
-        index = np.nonzero((resids[:, 0].astype(np.int) == model) & (resids[:, 1] == chain) & (
-                    resids[:, 2].astype(np.int) == resnumber))[0][0]
-    atom_positions = atom_positions[0][index]
-    atom_types = atom_types[0][index] -1 # Inside the code, atom_type = 0 corresponds to virtual atom or empty placeholder.
-    atom_triplets = atom_triplets[0][index]
     atom_index = list(atom_triplets[:,0])
     atom_bonds = np.zeros([Kmax,Kmax],dtype=np.bool)
 
