@@ -773,9 +773,8 @@ if __name__ == '__main__':
     import matplotlib
     matplotlib.use('module://backend_interagg')
     import matplotlib.pyplot as plt
-    import PDB_utils2
     import Bio.PDB
-    import pipelines
+    from preprocessing import PDBio,pipelines
     import numpy as np
 
     with_atom = True
@@ -896,7 +895,6 @@ if __name__ == '__main__':
         nrotations=nrotations,
         dropout=dropout,
         optimizer=optimizer, batch_size=1,
-        initial_values_folder='/specific/netapp5_2/iscb/wolfson/jeromet/Data/InterfacePrediction/initial_values/',
         fresh_initial_values=True,
         save_initial_values=False, n_init=1
     )

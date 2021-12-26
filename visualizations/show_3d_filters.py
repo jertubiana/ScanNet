@@ -167,10 +167,10 @@ def calculate_filter_specificities(model_name,
         top_neg_handcrafted_features = handcrafted_features_flat[top_neg]
 
         value_pos = np.array(
-            [[gaussian_network_features_flat[top_pos[:, u, v], u, v].mean() for u in range(Ngaussians)] for v in
+            [[ np.nanmean(gaussian_network_features_flat[top_pos[:, u, v], u, v]) for u in range(Ngaussians)] for v in
              range(nfilters)])  # nfilters X ngaussians
         value_neg = np.array(
-            [[gaussian_network_features_flat[top_neg[:, u, v], u, v].mean() for u in range(Ngaussians)] for v in
+            [[ np.nanmean(gaussian_network_features_flat[top_neg[:, u, v], u, v]) for u in range(Ngaussians)] for v in
              range(nfilters)])  # nfilters X ngaussians
 
 

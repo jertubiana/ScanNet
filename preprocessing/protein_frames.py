@@ -305,6 +305,15 @@ def _get_aa_frameCloud_quadruplet(atom_coordinates, atom_ids, verbose=True):
 
 def add_virtual_atoms(atom_clouds, atom_triplets, verbose=True):
     virtual_atom_clouds, atom_triplets = _add_virtual_atoms(atom_clouds, atom_triplets, verbose=verbose)
+    if np.abs(virtual_atom_clouds).max() >1e8:
+        print('The weird numba bug happened again at add_virtual_atoms, rerunning once')
+        virtual_atom_clouds, atom_triplets = _add_virtual_atoms(atom_clouds, atom_triplets, verbose=verbose)
+        if np.abs(virtual_atom_clouds).max() > 1e8:
+            print('The weird numba bug persists...')
+        else:
+            print('The weird numba bug was fixed by rerunning')
+
+
     if len(virtual_atom_clouds) > 0:
         atom_clouds = np.concatenate([atom_clouds, np.array(virtual_atom_clouds)], axis=0)
     return atom_clouds, atom_triplets
