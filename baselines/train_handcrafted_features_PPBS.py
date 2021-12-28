@@ -18,7 +18,7 @@ def make_PR_curves(
         title = '',
         figsize=(10, 10),
         margin=0.05,grid=0.1
-        ,fs=25):
+        ,fs=25,legend_fs=15):
     import matplotlib
     matplotlib.use('agg')
     import matplotlib.pyplot as plt
@@ -53,14 +53,14 @@ def make_PR_curves(
     fig, ax = plt.subplots(figsize=figsize)
     for i in range(nSubsets):
         ax.plot(all_PR_curves[i][1], all_PR_curves[i][0], color=subsetColors[i],linewidth=2.0,
-                label='%s (AUCPR= %.3f)' % (subset_names[i], all_AUCPRs[i]))
+                label='%s (%.3f)' % (subset_names[i], all_AUCPRs[i]))
     plt.xticks(np.arange(0, 1.0 + grid, grid), fontsize=fs * 2/3)
     plt.yticks(np.arange(0, 1.0 + grid, grid), fontsize=fs * 2/3)
     plt.xlim([0 - margin, 1 + margin])
     plt.ylim([0 - margin, 1 + margin])
     plt.grid()
 
-    plt.legend(fontsize=fs)
+    plt.legend(fontsize=legend_fs)
     plt.xlabel('Recall', fontsize=fs)
     plt.ylabel('Precision', fontsize=fs)
     plt.title(title,fontsize=fs)

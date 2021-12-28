@@ -305,16 +305,20 @@ def _get_aa_frameCloud_quadruplet(atom_coordinates, atom_ids, verbose=True):
 
 def add_virtual_atoms(atom_clouds, atom_triplets, verbose=True):
     virtual_atom_clouds, atom_triplets = _add_virtual_atoms(atom_clouds, atom_triplets, verbose=verbose)
-    if np.abs(virtual_atom_clouds).max() >1e8:
-        print('The weird numba bug happened again at add_virtual_atoms, rerunning once')
-        virtual_atom_clouds, atom_triplets = _add_virtual_atoms(atom_clouds, atom_triplets, verbose=verbose)
-        if np.abs(virtual_atom_clouds).max() > 1e8:
-            print('The weird numba bug persists...')
-        else:
-            print('The weird numba bug was fixed by rerunning')
-
-
     if len(virtual_atom_clouds) > 0:
+        virtual_atom_clouds = np.array(virtual_atom_clouds)
+        if np.abs(virtual_atom_clouds).max() >1e8:
+            print('The weird numba bug happened again at add_virtual_atoms, need to fix virtual atoms')
+            weird_indices = np.nonzero(np.abs(virtual_atom_clouds).max(-1) >1e8 )[0]
+            print('Fixing %s virtual atoms'%len(weird_indices))
+            original_atom_indices = np.array([np.nonzero((atom_triplets[:,1:] == len(atom_triplets)+ index).max(-1))[0][0] for index in weird_indices])
+            print(weird_indices,original_atom_indices)
+            for weird_index, original_atom_index in zip(weird_indices,original_atom_indices):
+                virtual_atom_clouds[weird_index] = atom_clouds[original_atom_index,:]
+                if atom_triplets[original_atom_index,1] == weird_index:
+                    virtual_atom_clouds[weird_index][0] +=1
+                else:
+                    virtual_atom_clouds[weird_index][2] += 1
         atom_clouds = np.concatenate([atom_clouds, np.array(virtual_atom_clouds)], axis=0)
     return atom_clouds, atom_triplets
 
@@ -377,8 +381,8 @@ def _add_virtual_atoms(atom_clouds, atom_triplets, verbose=True):
 
 
 if __name__ == '__main__':
-    import PDB_processing
     import Bio.PDB
+    from preprocessing import PDBio,PDB_processing
 
     PDB_folder = '/Users/jerometubiana/PDB/'
     pdblist = Bio.PDB.PDBList()
