@@ -285,7 +285,8 @@ def weight_logo_aa(PWM_pos, value_pos, PWM_neg=None, value_neg=None, threshold=0
             weight = PWM_neg[aa] * value_neg
             letterAt(aa, 0, yneg, yscale=weight, ax=ax, type='aa')
             yneg += weight
-    plt.plot([-0.4, 0.4], [0, 0], c='black', linewidth=4.0)
+    if PWM_neg is not None:
+        plt.plot([-0.4, 0.4], [0, 0], c='black', linewidth=4.0)
     plt.xlim([-ymax / 2, ymax / 2])
     plt.ylim([-ymax, ymax])
     plt.axis('off')
@@ -428,7 +429,7 @@ def matplotlib_to_sprite(fig, position, scale=1.0, figname=None, tmp_folder='tmp
         img = mpimg.imread(tmp_folder + figname)
         rows = (img.sum(-1) == 1.*3).min(1) # Remove white
         cols = (img.sum(-1) == 1.*3).min(0)
-        img = img[~rows,:][:,~cols]
+        img = np.asarray(img[~rows,:][:,~cols],order='c')
         mpimg.imsave(tmp_folder + figname,img,dpi=dpi)
     img_figure = pythreejs.ImageTexture(imageUri=tmp_folder + figname)
     # if clear:
@@ -491,6 +492,7 @@ def show_ellipsoids(list_ellipsoids=[(np.zeros(3), np.eye(3))],
                     zlims=None,
                     download=False,
                     crop=False,
+                    render = True,
                     tmp_folder = 'tmp/',
                     dpi=300
                     ):
@@ -536,7 +538,10 @@ def show_ellipsoids(list_ellipsoids=[(np.zeros(3), np.eye(3))],
     camera = pythreejs.PerspectiveCamera(position=camera_position)
     controller = pythreejs.OrbitControls(controlling=camera)
 
-    children = [camera, key_light, ambient_light]
+    if render:
+        children = [camera, key_light, ambient_light]
+    else:
+        children = []
     children2 = []
 
     d2camera = np.array([((np.array(camera_position) - list_ellipsoids[n][0]) ** 2).sum() for n in range(nellipsoids)])
@@ -610,16 +615,19 @@ def show_ellipsoids(list_ellipsoids=[(np.zeros(3), np.eye(3))],
         segments = pythreejs.LineSegments2(g, m)
         children.append(segments)
 
-    children += list_additional_objects
-
-    scene = pythreejs.Scene(children=children)
-    renderer = pythreejs.Renderer(camera=camera, scene=scene, controls=[controller],
-                                  width=1000, height=1000, antialias=True, sortObjects=False,
-                                  clearOpacity=0, alpha=True, autoClear=True)
-    if download:
-        return downloadable(renderer)
+    # children += list_additional_objects
+    children = list_additional_objects + children
+    if not render:
+        return children
     else:
-        return renderer
+        scene = pythreejs.Scene(children=children)
+        renderer = pythreejs.Renderer(camera=camera, scene=scene, controls=[controller],
+                                      width=1000, height=1000, antialias=True, sortObjects=False,
+                                      clearOpacity=0, alpha=True, autoClear=True)
+        if download:
+            return downloadable(renderer)
+        else:
+            return renderer
 
 
 def make_example(nellipsoids=10, K=10, sg=None):

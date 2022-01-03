@@ -212,13 +212,16 @@ class series_Predictor_wrapper(Predictor_wrapper):
 
 class grouped_Predictor_wrapper(Predictor_wrapper):
     def __init__(self, model_builder, *args, backend='keras', multi_inputs=True,multi_outputs=False, verbose=True,
-                 input_type = ['frames','points','attributes'],Lmaxs = [800,800,800],**kwargs):
+                 input_type = ['frames','points','attributes'],Lmaxs = [800,800,800],Lmax_outputs=None,**kwargs):
         super(grouped_Predictor_wrapper, self).__init__(
             model_builder, *args, backend=backend, **kwargs)
         self.multi_inputs = multi_inputs
         self.multi_outputs = multi_outputs
         self.input_type = input_type
         self.Lmax = Lmaxs
+        if Lmax_outputs is None:
+            self.Lmax_output = Lmaxs[0] if (isinstance(Lmaxs,list) | isinstance(Lmaxs,tuple)) else Lmaxs
+
         self.big_distance = 3e3
         self.big_sequence_distance = 1000
         self.verbose=verbose
@@ -226,7 +229,9 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
                                        'multi_outputs':self.multi_outputs,
                                        'input_type':self.input_type,
                                        'Lmaxs':self.Lmax,
-                                       'verbose':self.verbose}
+                                       'Lmax_outputs':self.Lmax_output,
+                                       'verbose':self.verbose
+                                       }
 
     def group_examples(self,Ls):
         Ls = np.array(Ls)
@@ -349,26 +354,28 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
 
 
     def ungroup_and_unpadd(self, grouped_outputs,groups,which='outputs'):
-        nexamples = sum([len(group) for group in groups])
         if which == 'outputs':
             multi_valued = self.multi_outputs
         else:
             multi_valued = self.multi_inputs
         if multi_valued:
+            nexamples = sum([len(group) for group in groups[0]])
             noutputs = len(grouped_outputs)
             outputs = [ np.array([None for _ in range(nexamples)],dtype=np.object) for _ in range(noutputs) ]
         else:
+            nexamples = sum([len(group) for group in groups])
             outputs = np.array([None for _ in range(nexamples)],dtype=np.object)
-        for k,group in enumerate(groups):
-            for example,start,end in group:
-                if multi_valued:
-                    for n in range(noutputs):
+            noutputs = 1
+        if multi_valued:
+            for n in range(noutputs):
+                for k, group in enumerate(groups[n]):
+                    for example, start, end in group:
                         outputs[n][example] = grouped_outputs[n][k][start:end]
-                else:
+        else:
+            for k,group in enumerate(groups):
+                for example,start,end in group:
                     outputs[example] = grouped_outputs[k][start:end]
         return outputs
-
-
 
 
     def predict(self, inputs,batch_size=8,return_all=False,truncated=True,Ls=None):
@@ -378,11 +385,41 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
         else:
             Ls = [len(input_) for input_ in inputs]
             ninputs = 1
-
+        if self.multi_outputs:
+            noutputs = len(self.Lmax_output) if (isinstance(self.Lmax_output,list) | isinstance(self.Lmax_output,tuple) ) else 10
+            if self.multi_inputs:
+                if isinstance(self.Lmax_output,list) | isinstance(self.Lmax_output,tuple):
+                    output2inputs = [self.Lmax.index(Lmax_output) for Lmax_output in self.Lmax_output]
+                else:
+                    output2inputs = [0 for _ in range(noutputs)]
+                Loutputs = [[len(input_) for input_ in inputs[output2input]] for output2input in output2inputs]
+            else:
+                Loutputs = [Ls for _ in range(noutputs)]
+        else:
+            Loutputs = Ls
+            noutputs = 1
 
         if self.verbose:
             print('Generating groups...')
         groups = self.group_examples(Ls)
+        if self.multi_outputs:
+            group_outputs = []
+            for n in range(noutputs):
+                Loutputs_ = Loutputs[n]
+                Lmax_output = self.Lmax_output if isinstance(self.Lmax_output,int) else self.Lmax_output[n]
+                group_outputs_ = []
+                for group in groups:
+                    start = 0
+                    group_ = []
+                    for index,_,_ in group:
+                        group_.append( (index,min(start,Lmax_output), min(start+Loutputs_[index],Lmax_output) ) )
+                        start += Loutputs_[index]
+                    group_outputs_.append(group_)
+                group_outputs.append(group_outputs_)
+        else:
+            group_outputs = groups
+
+
         if self.verbose:
             print('Grouped %s examples in %s groups'%(len(Ls),len(groups)) )
         if self.verbose:
@@ -391,15 +428,20 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
         if self.verbose:
             print('Performing prediction...')
         grouped_outputs = self.model.predict(grouped_inputs,batch_size=batch_size,verbose=True)
+
+
         if self.verbose:
             print('Ungrouping and unpadding...')
-        outputs = self.ungroup_and_unpadd(grouped_outputs,groups)
+        outputs = self.ungroup_and_unpadd(grouped_outputs,group_outputs)
+
         if self.verbose:
             print('prediction done!')
         if (not return_all) & self.multi_outputs:
             return np.array([output_[:,1] for output_ in outputs[0]])
         elif (not return_all) & ~self.multi_outputs:
             return np.array([output_[:,1] for output_ in outputs])
+        elif return_all & self.multi_outputs:
+            return [np.array(outputs_) for outputs_ in outputs]
         else:
             return np.array([output_ for output_ in outputs])
 
@@ -456,3 +498,6 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
         if self.verbose:
             print('Fitting done!')
         return history
+
+
+#%% Testing:

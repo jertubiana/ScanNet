@@ -2,6 +2,7 @@ import pythreejs
 import numpy as np
 from preprocessing import PDBio,PDB_processing,pipelines,protein_chemistry
 from network import neighborhoods
+from visualizations import weight_logo_3d
 
 def rgb_to_hex(rgb):
     if isinstance(rgb, str):
@@ -123,6 +124,37 @@ def show_atoms(
         return children
 
 
+def show_aminoacids(aa_neighbors,
+             aa_pwms, aa_bonds,
+             sg=None, camera_position=None,render=True):
+    if camera_position is None:
+        camera_position = [0.8, 0.5, 0.8]
+    Kmax = aa_neighbors.shape[0]
+
+    list_ellipsoids = [(aa_neighbors[k], np.eye(3) * 0.1 ** 2) for k in range(Kmax)]
+    list_colors = [weight_logo_3d.aa_colors[ weight_logo_3d.list_aa[np.argmax(aa_pwms[k])]] for k in range(Kmax) ]
+    list_figures = [weight_logo_3d.weight_logo_aa(aa_pwms[k], 1.0, ymax=1.0) for k in range(Kmax)]
+
+    segment_starts = [bond[0] for bond in aa_bonds]
+    segment_ends = [bond[1] for bond in aa_bonds]
+    list_segments = [ [list(aa_neighbors[segment_start]), list(aa_neighbors[segment_end]) ] for segment_start,segment_end in zip(segment_starts,segment_ends) ]
+
+
+    return weight_logo_3d.show_ellipsoids(list_ellipsoids=list_ellipsoids,
+                                          list_colors=list_colors,
+                                          list_figures=list_figures,
+                                          list_segments=list_segments,
+                                          level=1.0, sg=sg,
+                                          wireframe=False,
+                                          show_frame=True,
+                                          fs=1.,
+                                          scale=1.5,
+                                          offset=[0., 1.0, 0.0],
+                                          camera_position=camera_position,
+                                          key_light_position=[0.5, 1, 0],
+                                          opacity=0.6,
+                                          maxi=12,dpi=100,crop=True,render=render)
+
 
 
 
@@ -227,3 +259,59 @@ def get_neighborhood(
     return atom_positions,atom_types,atom_bonds
 
 
+
+
+def get_neighborhood_aa(
+        pdb = '1a3x',
+        model = 0,
+        chain = 'A',
+        resnumber = 1,
+        resindex = None,
+        assembly=False,
+        biounit=True,
+        Kmax = None
+):
+    if Kmax is None:
+        Kmax = 16
+
+    filename,_ = PDBio.getPDB(pdb,biounit=biounit)
+    if assembly == True:
+        chain_ids = 'all'
+    elif isinstance(assembly,list):
+        chain_ids = assembly
+    else:
+        chain_ids = [(model,chain)]
+    struct, chains = PDBio.load_chains(file=filename,chain_ids=chain_ids)
+    pipeline = pipelines.ScanNetPipeline(aa_features='sequence',
+                                         atom_features='id'
+                                         )
+
+    [aa_triplets, aa_attributes,aa_indices,aa_clouds,
+     _, _, _, _],_ = pipeline.process_example(chains)
+
+    resids = PDB_processing.get_PDB_indices(chains,return_chain=True,return_model=True)
+
+    if resindex is not None:
+        index = resindex
+    else:
+        try:
+            index = np.nonzero( (resids[:,0].astype(np.int) == model) &
+                                (resids[:,1]==chain) &
+                                (resids[:,2].astype(np.int)==resnumber)
+                                )[0][0]
+        except:
+            raise ValueError('Residue #%s/%s:%s not found' % (model, chain, resnumber))
+
+    frames = neighborhoods.get_Frames(
+        [[aa_triplets[index:index+1]],[aa_clouds]], order='2')
+
+
+    aa_positions, aa_types =  neighborhoods.get_LocalNeighborhood([ [frames[0]], [aa_clouds[aa_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [aa_attributes],
+                                        )
+    _, aa_sequence_position =  neighborhoods.get_LocalNeighborhood([ [frames[0]], [aa_clouds[aa_triplets[:,0]]]  ],{'self_neighborhood':False,'Kmax': Kmax},attributes= [aa_indices],
+                                        )
+    aa_positions = aa_positions[0,0]
+    aa_types = aa_types[0, 0]
+    aa_sequence_position = aa_sequence_position[0,0,:,0]
+    aa_peptide_bonds = list(zip(*np.nonzero(aa_sequence_position[np.newaxis,:] == aa_sequence_position[:,np.newaxis]+1) ) )
+    return aa_positions,aa_types,aa_peptide_bonds

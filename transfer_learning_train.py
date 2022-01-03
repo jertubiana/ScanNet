@@ -9,7 +9,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.optimizers import Adam
 import os
 from train import make_PR_curves
-
+import sys
 
 if __name__ == '__main__':
     '''
@@ -19,7 +19,8 @@ if __name__ == '__main__':
     '''
 
     check = False # Check = True to verify installation, =False for full training.
-    train = False # True to retrain, False to evaluate the model shown in paper.
+    train = True # True to retrain, False to evaluate the model shown in paper.
+    transfer = True # If False, retrain from scratch.
     use_evolutionary = False # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
     Lmax_aa = 256 if check else 2120
     ''' 
@@ -30,13 +31,20 @@ if __name__ == '__main__':
     '''
     epochs_max = 2 if check else 100
 
+    ncores = 4
+
 
     if train: # Retrain model.
         model_name = 'ScanNet_PAI_retrained'
         root_model_name = 'ScanNet_PPI' # The initial model.
+        if len(sys.argv)>1: # python transfer_learning_train.py 1/2/...
+            model_name += '_%s'%sys.argv[1] # Retrain multiple times for error bars.
+            root_model_name += '_retrained_%s'%sys.argv[1] # Retrain multiple times for error bars.
         if not use_evolutionary:
             model_name += '_noMSA'
             root_model_name += '_noMSA'
+        if not transfer:
+            model_name += '_scratch'
         if check:
             model_name += '_check'
 
@@ -111,6 +119,7 @@ if __name__ == '__main__':
             biounit=False, # Whether to use biological assembly files or the regular pdb files (asymmetric units). True for PPBS data set, False for BCE data set.
             save = True, # Whether to save the results in pickle file format. Files are stored in the pipeline_folder defined in paths.py
             fresh = False, # If fresh = False, attemps to load pickle files first.
+            ncores = ncores
         )
 
         weights = np.array(dataset_table['Sample weight'][ dataset_table['Set'] == dataset_name ] )
@@ -155,7 +164,7 @@ if __name__ == '__main__':
 
         if train:
             #%% Load initial model.
-            model = wrappers.load_model(paths.model_folder + root_model_name, Lmax=Lmax_aa)
+            model = wrappers.load_model(paths.model_folder + root_model_name, Lmax=Lmax_aa, load_weights=transfer) # If transfer, load weights from root network; otherwise, only load architecture and loss.
             optimizer = Adam(lr=1e-4, beta_2=0.99, epsilon=1e-4)
             model.model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
                 'categorical_crossentropy', 'categorical_accuracy']),  # Recompile model with an optimizer with lower learning rate.

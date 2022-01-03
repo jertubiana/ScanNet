@@ -113,6 +113,7 @@ def predict_interface_residues(
     overwrite_MSA=False,
     Lmin=1,
     output_predictions=True,
+    aggregate_models=True,
     output_chimera='annotation',
     chimera_thresholds = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
     permissive=False,
@@ -398,36 +399,35 @@ def predict_interface_residues(
     print('Loading model %s' % model_name, file=logfile)
     if isinstance(model,list):
         multi_models = True
-        aggregate_models = True
         model_objs = [wrappers.load_model(model_folder + model_, Lmax=Lmax) for model_ in model]
-    elif isinstance(layer,list):
-        multi_models = True
-        aggregate_models = False
-        model_objs = [wrappers.load_model(model_folder  + model, Lmax=Lmax) for l in layer]
+        model_obj = None
     else:
         multi_models = False
-        aggregate_models = True
         model_obj = wrappers.load_model(model_folder + model, Lmax=Lmax)
+        model_objs = None
 
     if layer is not None:
         if isinstance(layer,list):
-            for l,model_obj in zip(layer,model_objs):
-                if l is not None:
-                    if l == 'attention_layer':
-                        model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(l).output[1])
-                    else:
-                        model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(l).output)
-                    model_obj.model = model_truncated
+            layer_outputs = []
+            for layer_ in layer:
+                if layer_ is None:
+                    layer_outputs.append(model_obj.model.get_layer('classifier_output').output)
+                elif layer_ == 'attention_layer':
+                    layer_outputs.append(model_obj.model.get_layer('attention_layer').output[1])
+                else:
+                    layer_outputs.append(model_obj.model.get_layer(layer_).output)
+
+            model_obj.model = Model(inputs=model_obj.model.inputs,outputs=layer_outputs)
+            model_obj.multi_outputs = True
+            model_obj.Lmax_output = [int(output.shape[1]) for output in layer_outputs]
         else:
             if layer == 'attention_layer':
-                model_truncated = Model(inputs=model_obj.model.inputs, outputs=model_obj.model.get_layer(layer).output[1])
+                model_obj.model = Model(inputs=model_obj.model.inputs, outputs=model_obj.model.get_layer(layer).output[1])
             else:
-                model_truncated = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(layer).output)
-            model_obj.model = model_truncated
+                model_obj.model = Model(inputs=model_obj.model.inputs,outputs=model_obj.model.get_layer(layer).output)
         return_all = True
     else:
         return_all = False
-
 
     if hasattr(pipeline, 'Lmax'):
         pipeline.Lmax = Lmax
@@ -454,10 +454,9 @@ def predict_interface_residues(
                      query_predictions = [prediction1 + prediction2 for prediction1,prediction2 in zip(query_predictions,predictions)]
                  query_predictions = np.array([prediction/len(model_objs) for prediction in query_predictions])
             else:
-                tmp = [model_obj.predict(inputs, batch_size=1,return_all=return_all) for model_obj in model_objs]
-                query_predictions = [ [tmp[k][l] for k in range(len(tmp))] for l in range(len(tmp[0])) ]
+                query_predictions = [model_obj.predict(inputs, batch_size=1,return_all=return_all) for model_obj in model_objs]
         else:
-             query_predictions = model_obj.predict(inputs, batch_size=1,return_all=return_all)
+            query_predictions = model_obj.predict(inputs, batch_size=1,return_all=return_all)
 
         if padded:
             query_predictions = wrappers.truncate_list_of_arrays(
@@ -483,7 +482,7 @@ def predict_interface_residues(
                 attention_coeffs = query_predictions
             else:
                 index = layer.index('attention_layer')
-                attention_coeffs = [prediction[index] for prediction in query_predictions]
+                attention_coeffs = query_predictions[index]
 
             aggregated_attention_coeffs = []
             sign = np.sign(attention_coeffs[0][:, 0, 0]).mean()
@@ -500,9 +499,7 @@ def predict_interface_residues(
             if layer == 'attention_layer':
                 query_predictions = aggregated_attention_coeffs
             else:
-                for query_prediction,aggregated_attention_coeff in zip(query_predictions,aggregated_attention_coeffs):
-                    query_prediction[index] = aggregated_attention_coeff
-
+                query_predictions[index] = aggregated_attention_coeffs
 
     else:
         query_predictions = []
@@ -565,26 +562,32 @@ def predict_interface_residues(
                 else:
                     predictions[index] = aggregated_attention_coeffs
 
-
-            if aggregate_models:
-                query_predictions.append(
-                    np.concatenate(predictions, axis=0)
-                )
-            else:
+            if ((isinstance(layer,list) ) | (isinstance(layer,tuple)) | (not aggregate_models) ):
                 query_predictions.append(
                     [np.concatenate(prediction, axis=0) for prediction in predictions]
                 )
+            else:
+                query_predictions.append(
+                    np.concatenate(predictions, axis=0)
+                )
+        if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
+            query_predictions = [ [query_predictions[k][l] for k in range(len(query_predictions))] for l in range(len(query_predictions[0])) ]
+
 
 
     output_folder=predictions_folder + '/'
     if not os.path.isdir(output_folder):
         os.mkdir(output_folder)
 
+
     if output_predictions:
         for i in range(nqueries):
             res_ids = query_residue_ids[i]
             sequence = query_sequences[i]
-            predictions = query_predictions[i]
+            if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
+                predictions = [query_predictions_[i] for query_predictions_ in query_predictions]
+            else:
+                predictions = query_predictions[i]
             query_name = query_names[i]
             query_chain = query_chain_ids[i]
             query_chain_id_is_all = query_chain_id_is_alls[i]
@@ -609,7 +612,7 @@ def predict_interface_residues(
 
 
 
-            if not aggregate_models: # multioutput.
+            if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
                 for layer_,prediction in zip(layer,predictions):
                     if layer_ is None:
                         prediction = prediction[:,1]
@@ -793,7 +796,7 @@ if __name__ == '__main__':
         if '+' in layer:
             layer = layer.split('+')
             for i in range(len(layer)):
-                if layer[i] in ['','output','probability']:
+                if layer[i] in ['classifier_output','','output','probability']:
                     layer[i] = None
 
     predict_interface_residues(

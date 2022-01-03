@@ -7,7 +7,7 @@ import numpy as np
 import utilities.paths as paths
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
-
+import sys
 
 def make_PR_curves(
         all_labels,
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     Model is trained from scratch.
     '''
     check = False # Check = True to verify installation, =False for full training.
-    train = False # True to retrain, False to evaluate the model shown in paper.
+    train = True # True to retrain, False to evaluate the model shown in paper.
     use_evolutionary = False # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
     Lmax_aa = 256 if check else 1024
     ''' 
@@ -87,9 +87,13 @@ if __name__ == '__main__':
     '''
     epochs_max = 2 if check else 100
 
+    ncores = 4
+
 
     if train: # Retrain model.
         model_name = 'ScanNet_PPI_retrained'
+        if len(sys.argv)>1: # python train.py 1/2/...
+            model_name += '_%s'%sys.argv[1] # Retrain multiple times for error bars.
         if not use_evolutionary:
             model_name += '_noMSA'
         if check:
@@ -175,6 +179,7 @@ if __name__ == '__main__':
             save = True, # Whether to save the results in pickle file format. Files are stored in the pipeline_folder defined in paths.py
             fresh = False, # If fresh = False, attemps to load pickle files first.
             permissive=True, # Will not stop if some examples fail. Errors notably occur when a biological assembly file is updated.
+            ncores = ncores # Number of parallel processes.
         )
 
         weights = np.array(dataset_table['Sample weight'][ dataset_table['Set'] == dataset_name ] )

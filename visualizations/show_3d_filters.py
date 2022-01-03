@@ -49,6 +49,7 @@ def calculate_filter_specificities(model_name,
         use_evolutionary = not ('noMSA' in model_name)
         pipeline = pipelines.ScanNetPipeline(
             with_atom=True,
+            atom_features = 'id',
             aa_features='pwm' if use_evolutionary else 'sequence',
         )
         handcrafted_pipeline = pipelines.HandcraftedFeaturesPipeline(feature_list=['primary','secondary','asa'])
@@ -136,41 +137,54 @@ def calculate_filter_specificities(model_name,
 
         if Lmax is None:
             Lmax = max([len(x) for x in inputs_handcrafted])
-        model = wrappers.load_model(model_folder+model_name,Lmax=Lmax)
-        submodel = wrappers.load_model(model_folder+model_name,Lmax=Lmax)
-        submodel.model = Model(inputs=model.model.inputs,outputs=model.model.get_layer('all_embedded_attributes_aa').output)
-        submodel2 = wrappers.load_model(model_folder+model_name,Lmax=Lmax)
-        submodel2.model = Model(inputs=model.model.inputs,outputs=model.model.get_layer('SCAN_filter_activity_aa').output)
 
+        atom_ids = inputs_scannet[5]
+        sequences = [np.argmax(handcrafted_feature[:, :20], axis=-1) for handcrafted_feature in inputs_handcrafted]
+        inputs_scannet[5] = [protein_chemistry.index_to_valency[sequence[atom_index[:,0]],atom_id-1]+1 for sequence,atom_index,atom_id in zip(sequences,inputs_scannet[6],inputs_scannet[5])]
+
+
+        model = wrappers.load_model(model_folder+model_name,Lmax=Lmax)
+        layer_outputs = [model.model.get_layer(layer).output for layer in ['SCAN_filter_activity_atom','all_embedded_attributes_aa','SCAN_filter_activity_aa','classifier_output'] ]
+        model.model = Model(inputs=model.model.inputs,outputs= layer_outputs
+                            )
+        model.multi_outputs = True
+        model.Lmax_output = [int(output.shape[1]) for output in layer_outputs]
         if nmax is not None:
             nmax = min(len(inputs_handcrafted), nmax)
             inputs_scannet = wrappers.slice_list_of_arrays(inputs_scannet,np.arange(nmax))
             inputs_handcrafted = wrappers.slice_list_of_arrays(inputs_handcrafted,np.arange(nmax))
 
-        network_features = submodel.predict(inputs_scannet, return_all=True)
-        filter_activities = submodel2.predict(inputs_scannet, return_all=True)
-        network_features_flat = np.concatenate(network_features)
+        [atomic_filter_activities,aggregated_atomic_filter_activities,aminoacid_filter_activities,classifier_output] = model.predict(inputs_scannet,return_all=True)
+        atomic_filter_activities_flat = np.concatenate(atomic_filter_activities)
+        aggregated_atomic_filter_activities_flat = np.concatenate(aggregated_atomic_filter_activities)
         handcrafted_features_flat = np.concatenate([features[:Lmax] for features in inputs_handcrafted])
-        filter_activities_flat = np.concatenate(filter_activities)
+        aminoacid_filter_activities_flat = np.concatenate(aminoacid_filter_activities)
+        classifier_output_flat = np.concatenate(classifier_output)[:,-1]
+
+        aminoacid = np.concatenate([sequence[:Lmax] for sequence in sequences])
+        atom = np.concatenate([atom_id[:Lmax*9] for atom_id in atom_ids])-1
+        aminoacid_of_atom = np.concatenate([sequence[input_scannet[:,0]][:Lmax*9] for sequence,input_scannet in zip(sequences,inputs_scannet[-2])])
+
+
         W1 = model.model.get_layer('SCAN_filter_input_aa').get_weights()[0]
         W2 = model.model.get_layer('SCAN_filter_input_aa').get_weights()[1]
-        gaussian_network_features_flat = np.dot(network_features_flat, W1) + W2[np.newaxis]
+        gaussian_activities_flat = np.dot(aggregated_atomic_filter_activities_flat, W1) + W2[np.newaxis]
 
-        Ngaussians = gaussian_network_features_flat.shape[1]
-        nfilters = gaussian_network_features_flat.shape[2]
+        Ngaussians = gaussian_activities_flat.shape[1]
+        nfilters = gaussian_activities_flat.shape[2]
 
-        maxi = int(len(network_features_flat) * top_percent/100.)
-        top_pos = np.argsort(gaussian_network_features_flat, axis=0)[-maxi:]
-        top_neg = np.argsort(gaussian_network_features_flat, axis=0)[:maxi]
+        maxi = int(len(aggregated_atomic_filter_activities_flat) * top_percent/100.)
+        top_pos = np.argsort(gaussian_activities_flat, axis=0)[-maxi:]
+        top_neg = np.argsort(gaussian_activities_flat, axis=0)[:maxi]
 
         top_pos_handcrafted_features = handcrafted_features_flat[top_pos]
         top_neg_handcrafted_features = handcrafted_features_flat[top_neg]
 
         value_pos = np.array(
-            [[ np.nanmean(gaussian_network_features_flat[top_pos[:, u, v], u, v]) for u in range(Ngaussians)] for v in
+            [[ np.nanmean(gaussian_activities_flat[top_pos[:, u, v], u, v]) for u in range(Ngaussians)] for v in
              range(nfilters)])  # nfilters X ngaussians
         value_neg = np.array(
-            [[ np.nanmean(gaussian_network_features_flat[top_neg[:, u, v], u, v]) for u in range(Ngaussians)] for v in
+            [[ np.nanmean(gaussian_activities_flat[top_neg[:, u, v], u, v]) for u in range(Ngaussians)] for v in
              range(nfilters)])  # nfilters X ngaussians
 
 
@@ -228,12 +242,39 @@ def calculate_filter_specificities(model_name,
                               'covariances':covariances
                               }
 
-        filter_specificities['filter_activity'] = {
-            'percentiles': np.percentile(filter_activities_flat, np.arange(1, 101),axis=0),
-            'mean': filter_activities_flat.mean(0),
-            'std': filter_activities_flat.std(0),
-            'correlation': np.corrcoef(filter_activities_flat.T),
+        filter_specificities['aa_activity'] = {
+            'percentiles': np.percentile(aminoacid_filter_activities_flat, np.arange(1, 101),axis=0),
+            'mean': aminoacid_filter_activities_flat.mean(0),
+            'median': np.median(aminoacid_filter_activities_flat,axis=0),
+            'std': aminoacid_filter_activities_flat.std(0),
+            'correlation': np.corrcoef(aminoacid_filter_activities_flat.T),
+            'correlation2output': np.corrcoef(aminoacid_filter_activities_flat.T,classifier_output_flat)[:-1,-1],
+            'conditional_median': np.array([np.median(aminoacid_filter_activities_flat[aminoacid==k,:],axis=0) for k in range(20)]),
         }
+
+        filter_specificities['aggregated_atom_activity'] = {
+            'percentiles': np.percentile(aggregated_atomic_filter_activities_flat, np.arange(1, 101),axis=0),
+            'mean': aggregated_atomic_filter_activities_flat.mean(0),
+            'median': np.median(aggregated_atomic_filter_activities_flat,axis=0),
+            'std': aggregated_atomic_filter_activities_flat.std(0),
+            'correlation': np.corrcoef(aggregated_atomic_filter_activities_flat.T),
+            'correlation2output': np.corrcoef(aggregated_atomic_filter_activities_flat.T,classifier_output_flat)[:-1,-1],
+            'conditional_median': np.array([np.median(aggregated_atomic_filter_activities_flat[aminoacid==k,:],axis=0) for k in range(20)]),
+        }
+
+        filter_specificities['atom_activity'] = {
+            'percentiles': np.percentile(atomic_filter_activities_flat, np.arange(1, 101), axis=0),
+            'mean': atomic_filter_activities_flat.mean(0),
+            'median': np.median(atomic_filter_activities_flat, axis=0),
+            'std': atomic_filter_activities_flat.std(0),
+            'correlation': np.corrcoef(atomic_filter_activities_flat.T),
+            'conditional_median': np.array(
+                [np.median(atomic_filter_activities_flat[atom == k,:],axis=0)for k in range(38)]),
+            'conditional_median2':np.array(
+                [[np.median(atomic_filter_activities_flat[(atom == k) & (aminoacid_of_atom==j),:],axis=0) if ((atom == k) & (aminoacid_of_atom==j)).sum()>0 else np.zeros(atomic_filter_activities_flat.shape[-1]) for k in range(38)] for j in range(20)]),
+        }
+
+
     else:
         model = wrappers.load_model(model_folder + model_name)
 
@@ -448,37 +489,6 @@ def plot_gaussian_kernels(params,sg=None,maxi=5,camera_position=None):
                                           key_light_position=[0.5, 1, 0],
                                           opacity=0.3,
                                           maxi=maxi)
-
-
-def plot_aminoacid_neighborhood(neighbors, pwm, index=None, sg=None, camera_position=None):
-    if camera_position is None:
-        camera_position = [0.8, 0.5, 0.8]
-    Kmax = neighbors.shape[0]
-
-    list_ellipsoids = [(neighbors[k], np.eye(3) * 0.1 ** 2) for k in range(Kmax)]
-    list_colors = [weight_logo_3d.aa_colors[ weight_logo_3d.list_aa[np.argmax(pwm[k])]] for k in range(Kmax) ]
-    list_figures = [weight_logo_3d.weight_logo_aa(pwm[k], 1.0, ymax=1.0 ) for k in range(Kmax)]
-
-    if index is not None:
-        segment_starts,segment_ends = np.nonzero( index[:,np.newaxis] == (index[np.newaxis,:]+1) )
-        list_segments = [ [list(neighbors[segment_start]), list(neighbors[segment_end]) ] for segment_start,segment_end in zip(segment_starts,segment_ends) ]
-    else:
-        list_segments = None
-
-    return weight_logo_3d.show_ellipsoids(list_ellipsoids=list_ellipsoids,
-                                          list_colors=list_colors,
-                                          list_figures=list_figures,
-                                          list_segments=list_segments,
-                                          level=1.0, sg=sg,
-                                          wireframe=False,
-                                          show_frame=True,
-                                          fs=1.,
-                                          scale=1.5,
-                                          offset=[0., 1.0, 0.0],
-                                          camera_position=camera_position,
-                                          key_light_position=[0.5, 1, 0],
-                                          opacity=0.6,
-                                          maxi=12,dpi=300,crop=True)
 
 
 
