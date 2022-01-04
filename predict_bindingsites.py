@@ -661,9 +661,16 @@ def predict_interface_residues(
                         chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi)
 
     if output_format == 'dictionary':
-        query_dictionary_predictions = [PDB_processing.make_values_dictionary(query_residue_id,query_prediction) for query_residue_id,query_prediction in zip(query_residue_ids,query_predictions)]
+        if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
+            query_dictionary_predictions = [PDB_processing.make_values_dictionary(query_residue_ids[k], [query_predictions[l][k] for l in range(len(query_predictions))])
+                                            for k in range(len(query_residue_ids))]
+        else:
+            query_dictionary_predictions = [PDB_processing.make_values_dictionary(query_residue_id,query_prediction) for query_residue_id,query_prediction in zip(query_residue_ids,query_predictions)]
         return query_pdbs,query_names,query_dictionary_predictions
     else:
+        if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
+            query_predictions = [
+                [query_predictions[i][j] for i in range(len(query_predictions))] for j in range(len(query_predictions[0]))]
         return query_pdbs,query_names,query_predictions, query_residue_ids, query_sequences
 
 

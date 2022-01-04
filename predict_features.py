@@ -63,6 +63,7 @@ def predict_features(list_queries,layer='SCAN_filter_activity_aa',
     )
     if output_format == 'numpy':
         query_pdbs, query_names, query_features, query_residue_ids, query_sequences = query_outputs
+
         if return_one:
             query_pdbs = query_pdbs[0]
             query_names = query_names[0]
@@ -106,7 +107,7 @@ if __name__ == '__main__':
 
 
     if output_format == 'dictionary':
-        list_names, list_dictionary_features = predict_features(['1a3x_A','1brs_A'],layer=layer,model=model,output_format=output_format)
+        list_names, list_dictionary_features = predict_features(['1a3x_A','1brs_A'],layer=layer,model=model,output_format=output_format,permissive=True)
         print('Dictionary format: Dictionary with residue ids as key and features as items.')
         for k in range(2):
             print('Query',list_names[k])
@@ -117,7 +118,7 @@ if __name__ == '__main__':
                 else:
                     print('AA',key, 'Features:',item[:5],'Feature shape',item.shape)
     elif output_format == 'numpy':
-        list_names, list_features, list_residue_ids = predict_features(['1a3x_A','1brs_A'],layer=layer,model=model,output_format='numpy')
+        list_names,list_features, list_residue_ids = predict_features(['1a3x_A','1brs_A'],layer=layer,model=model,output_format='numpy',permissive=True)
         print('Numpy format: Numpy arrays with residue ids as key and features as items.')
         for k in range(2):
             print('Query',list_names[k])
