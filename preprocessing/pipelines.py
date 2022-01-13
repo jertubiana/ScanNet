@@ -877,8 +877,11 @@ class ScanNetPipeline(Pipeline):
             inputs += [atom_triplets,atom_attributes,atom_indices,atom_clouds]
 
         if labels is not None:
-            outputs = binarize_categorical(
-                labels, 2).astype(curr_int)
+            if labels.dtype in [np.bool,np.int]:
+                outputs = binarize_categorical(
+                    labels, 2).astype(curr_int)
+            else:
+                outputs = labels
             if self.padded:
                 outputs = padd_matrix(outputs, Lmax=self.Lmax_aa, padding_value=0)[
                     np.newaxis]

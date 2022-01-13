@@ -237,7 +237,9 @@ def ScanNet(
         l12_pool=0.,
         l12group_pool=0.,
         dropout=0.,
-        optimizer='adam'):
+        optimizer='adam',
+        output = 'classification'
+):
 
 
     if frame_aa == 'triplet_backbone':
@@ -487,8 +489,11 @@ def ScanNet(
     cross_attention = TimeDistributed(Dense(nembedding_graph * nattentionheads_graph, use_bias=False,
                                             kernel_initializer=Zeros()), name='cross_attention')(embedded_filter)
 
-    if nfilters_graph > 2:
-        node_features_activation = 'relu'
+    if output == 'classification':
+        if nfilters_graph > 2:
+            node_features_activation = 'relu'
+        else:
+            node_features_activation = None
     else:
         node_features_activation = None
 
@@ -511,12 +516,15 @@ def ScanNet(
     graph_attention_output, attention_coefficients = attention.AttentionLayer(name='attention_layer')(
         [beta, self_attention, attention_local, node_features_local, embedded_graph_weights])
 
-    if nattentionheads_graph * nfilters_graph > 2:
-        classifier_output = TimeDistributed(Dense(
-            2, use_bias=True, activation='softmax'), name='classifier_output')(graph_attention_output)
+    if output == 'classification':
+        if nattentionheads_graph * nfilters_graph > 2:
+            classifier_output = TimeDistributed(Dense(
+                2, use_bias=True, activation='softmax'), name='classifier_output')(graph_attention_output)
+        else:
+            classifier_output = TimeDistributed(Activation(
+                'softmax'), name='classifier_output')(graph_attention_output)
     else:
-        classifier_output = TimeDistributed(Activation(
-            'softmax'), name='classifier_output')(graph_attention_output)
+        classifier_output = graph_attention_output
 
     inputs = [frame_indices_aa, attributes_aa, sequence_indices_aa, point_clouds_aa]
     if with_atom:
@@ -525,8 +533,12 @@ def ScanNet(
 
     model = Model(inputs=inputs,
                   outputs=classifier_output)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
-        'categorical_crossentropy', 'categorical_accuracy'])
+    if output == 'classification':
+        model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
+            'categorical_crossentropy', 'categorical_accuracy'])
+    else:
+        model.compile(loss='MSE', optimizer=optimizer, metrics=['MSE'])
+
     model.get_layer('edges_graph').set_weights(
         initial_values['dense_graph'])
     model.summary()
@@ -584,6 +596,7 @@ def initialize_ScanNet(
         initial_values_folder='/specific/netapp5_2/iscb/wolfson/jeromet/Data/InterfacePrediction/initial_values/',
         fresh_initial_values=False,
         save_initial_values=True,
+        output = 'classification',
         n_init=10,
         epochs = 100,
         batch_size=1):
@@ -759,6 +772,7 @@ def initialize_ScanNet(
                                                optimizer=optimizer,
                                                input_type=input_type,
                                                Lmaxs=Lmaxs,
+                                               output = output,
                                                multi_inputs=True,
                                                multi_outputs=False,
                                                )

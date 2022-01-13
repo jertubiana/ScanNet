@@ -77,7 +77,7 @@ if __name__ == '__main__':
     '''
     check = False # Check = True to verify installation, =False for full training.
     train = True # True to retrain, False to evaluate the model shown in paper.
-    use_evolutionary = False # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
+    use_evolutionary = True # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
     Lmax_aa = 256 if check else 1024
     ''' 
     Maximum length of the protein sequences.

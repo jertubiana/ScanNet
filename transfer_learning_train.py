@@ -17,11 +17,11 @@ if __name__ == '__main__':
     Model is trained via transfer learning, using the PPBS model as starting point.
     Five-fold cross-validation is used, i.e. five models are trained.
     '''
-
     check = False # Check = True to verify installation, =False for full training.
     train = True # True to retrain, False to evaluate the model shown in paper.
     transfer = True # If False, retrain from scratch.
-    use_evolutionary = False # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
+    freeze = False # If True, evaluate the binding site network without fine tuning.
+    use_evolutionary = True # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
     Lmax_aa = 256 if check else 2120
     ''' 
     Lmax_aa is the maximum length of the protein sequences.
@@ -45,6 +45,8 @@ if __name__ == '__main__':
             root_model_name += '_noMSA'
         if not transfer:
             model_name += '_scratch'
+        if freeze:
+            model_name += '_freeze'
         if check:
             model_name += '_check'
 
@@ -165,24 +167,25 @@ if __name__ == '__main__':
         if train:
             #%% Load initial model.
             model = wrappers.load_model(paths.model_folder + root_model_name, Lmax=Lmax_aa, load_weights=transfer) # If transfer, load weights from root network; otherwise, only load architecture and loss.
-            optimizer = Adam(lr=1e-4, beta_2=0.99, epsilon=1e-4)
-            model.model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
-                'categorical_crossentropy', 'categorical_accuracy']),  # Recompile model with an optimizer with lower learning rate.
-            extra_params = {'batch_size':1,'epochs':epochs_max}
+            if not freeze:
+                optimizer = Adam(lr=1e-4, beta_2=0.99, epsilon=1e-4)
+                model.model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[
+                    'categorical_crossentropy', 'categorical_accuracy']),  # Recompile model with an optimizer with lower learning rate.
+                extra_params = {'batch_size':1,'epochs':epochs_max}
 
-            # %% Train!
-            extra_params['validation_data'] = (
-                test_inputs, test_outputs, test_weights)
-            extra_params['callbacks'] = [
-                EarlyStopping(monitor='val_categorical_crossentropy', min_delta=0.001, patience=2,
-                              verbose=1, mode='min', restore_best_weights=True),
-                ReduceLROnPlateau(monitor='val_categorical_crossentropy', factor=0.5,
-                                  patience=2, verbose=1, mode='min', min_delta=0.001, cooldown=1)
-            ]
-            print('Starting training for fold %s...' % k)
-            history = model.fit(train_inputs, train_outputs,sample_weight=train_weights, **extra_params)
-            print('Training completed for fold %s! Saving model' % k)
-            model.save(paths.model_folder + model_names[k])
+                # %% Train!
+                extra_params['validation_data'] = (
+                    test_inputs, test_outputs, test_weights)
+                extra_params['callbacks'] = [
+                    EarlyStopping(monitor='val_categorical_crossentropy', min_delta=0.001, patience=2,
+                                  verbose=1, mode='min', restore_best_weights=True),
+                    ReduceLROnPlateau(monitor='val_categorical_crossentropy', factor=0.5,
+                                      patience=2, verbose=1, mode='min', min_delta=0.001, cooldown=1)
+                ]
+                print('Starting training for fold %s...' % k)
+                history = model.fit(train_inputs, train_outputs,sample_weight=train_weights, **extra_params)
+                print('Training completed for fold %s! Saving model' % k)
+                model.save(paths.model_folder + model_names[k])
         else:
             # No training. Load trained model.
             model = wrappers.load_model(paths.model_folder + model_names[k], Lmax=Lmax_aa)

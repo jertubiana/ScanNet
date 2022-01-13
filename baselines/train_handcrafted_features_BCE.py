@@ -96,6 +96,7 @@ if __name__ == '__main__':
             list_origins=list_origins, # Mandatory
             list_resids=list_resids, # Optional
             list_labels=list_labels, # Optional
+            ncores = 4,
             biounit=False, # Whether to use biological assembly files or the regular pdb files (asymmetric units). True for PPBS data set, False for BCE data set.
             save = True, # Whether to save the results in pickle file format. Files are stored in the pipeline_folder defined in paths.py
             fresh = False, # If fresh = False, attemps to load pickle files first.

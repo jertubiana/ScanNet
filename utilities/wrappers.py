@@ -221,6 +221,8 @@ class grouped_Predictor_wrapper(Predictor_wrapper):
         self.Lmax = Lmaxs
         if Lmax_outputs is None:
             self.Lmax_output = Lmaxs[0] if (isinstance(Lmaxs,list) | isinstance(Lmaxs,tuple)) else Lmaxs
+        else:
+            self.Lmax_output = Lmax_outputs
 
         self.big_distance = 3e3
         self.big_sequence_distance = 1000

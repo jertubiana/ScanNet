@@ -89,12 +89,12 @@ def align_labels(labels, pdb_resids,label_resids=None,format='missing'):
         label_resids_str = np.array(['_'.join([str(x) for x in y]) for y in label_resids])
         idx_pdb, idx_label = np.nonzero(pdb_resids_str[:, np.newaxis] == label_resids_str[np.newaxis, :])
         if format == 'sparse': # Unaligned labels are assigned category zero.
-            aligned_labels = np.zeros(sequence_length, dtype=labels.dtype)
+            aligned_labels = np.zeros( [sequence_length] + list(labels.shape[1:]), dtype=labels.dtype)
         elif format == 'missing': # Unaligned labels are assigned -1/nan category (unknown label, no backpropagation).
             if labels.dtype == np.int:
-                aligned_labels = np.zeros(sequence_length, dtype=labels.dtype) -1
+                aligned_labels = np.zeros( [sequence_length] + list(labels.shape[1:]), dtype=labels.dtype) -1
             else:
-                aligned_labels = np.zeros(sequence_length, dtype=labels.dtype) + np.nan
+                aligned_labels = np.zeros( [sequence_length] + list(labels.shape[1:]), dtype=labels.dtype) + np.nan
         else:
             raise ValueError('format not supported')
         aligned_labels[idx_pdb] = labels[idx_label]
