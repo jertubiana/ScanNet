@@ -50,7 +50,7 @@ Paths to the library, MSA & structures folders are defined in utilities/paths.py
 A Docker image is also available from DockerHub here:
 
 ```
-docker pull scannet
+docker pull jertubiana/scannet
 ```
 
 
