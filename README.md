@@ -1,8 +1,8 @@
 # ScanNet: An interpretable geometric deep learning model for structure-based protein binding site prediction
 
-![](images/ScanNet_logo.png)
+![](images/ScanNet_logo.jpg)
 
-![](images/gallery.png)
+![](images/gallery.jpg)
 
 ## Background
 

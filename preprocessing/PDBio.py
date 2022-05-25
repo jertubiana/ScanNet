@@ -129,7 +129,7 @@ class myPDBList(Bio.PDB.PDBList):
                 url = (self.pdb_server + '/pub/pdb/data/biounit/PDB/divided/%s/%s' %
                        (code[1:3], archive_fn))
             elif file_format == 'biounit_mmCif':
-                url = (self.pdb_server + '/pub/pdb/data/biounit/mmCIF/divided/%s/%s' %
+                url = (self.pdb_server + '/pub/pdb/data/assemblies/mmCIF/divided/%s/%s' %
                        (code[1:3], archive_fn))
             else:
                 url = ('http://mmtf.rcsb.org/v1.0/full/%s' % code)
@@ -274,10 +274,10 @@ def getPDB(identifier_string,biounit=True,structures_folder=structures_folder,ve
             pdb_downloader = myPDBList(verbose=verbose)
             if biounit:
                 location = pdb_downloader.retrieve_pdb_file(
-                    structure_id, pdir=structures_folder, file_format='biounit_mmCif')
+                    structure_id, pdir=structures_folder, file_format='biounit')
                 if location is None:
                     location = pdb_downloader.retrieve_pdb_file(
-                        structure_id, pdir=structures_folder, file_format='biounit')
+                        structure_id, pdir=structures_folder, file_format='biounit_mmCif')
             else:
                 location = pdb_downloader.retrieve_pdb_file(
                     structure_id, pdir=structures_folder, file_format='mmCif')

@@ -120,7 +120,9 @@ pipelines/
 PDB/
 MSA/
 tmp/
-baselines/homology/
+baselines/homology/cache/
+baselines/homology/*.Linux
+
 # Pycharm
 .idea/
 
@@ -140,3 +142,4 @@ predictions/.DS_Store
 datasets/.DS_Store
 .DS_Store
 datasets/.DS_Store
+utilities/paths_jerome.py
