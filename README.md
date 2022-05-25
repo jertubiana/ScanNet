@@ -36,20 +36,21 @@ Then:
 pip install -r requirements.txt
 ```
  
- If you are using a GPU, 
+ If you are using a GPU, add: 
+
+```
+pip install tensorflow-gpu
+```
+
  
  
 No other external software is necessary to run ScanNet.
 Paths to the library, MSA & structures folders are defined in utilities/paths.py
 
-Docker images for cpu and gpu execution are also available from DockerHub here: 
+A Docker image is also available from DockerHub here:
 
 ```
 docker pull scannet
-```
-
-```
-docker pull scannet-gpu
 ```
 
 
