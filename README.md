@@ -10,7 +10,8 @@ Once the three-dimensional structure of a protein has been determined experiment
 
 ## Content
 
-This repository contains codes for training, evaluating and visualizing the ScanNet network.
+This repository contains codes for training, evaluating and visualizing the ScanNet network. 
+This repository will be periodically updated; the software version used for the paper is available from <a href=https://zenodo.org/record/6521889#.Yo4khy8Rpqs> Zenodo </a>  
 
 ## Installation
 ScanNet is implemented using Python 3.6.12 and various scientific computing packages (numpy, numba, scikit-learn, tensorflow, keras). We recommend creating a dedicated virtual environment and installing the same package versions, see the full list in requirements.txt.   
