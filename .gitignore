@@ -134,7 +134,7 @@ models/initial_values/*
 models/*retrained*
 models/*check*
 models/*handcrafted*
-visualizations/*.data
+#visualizations/*.data
 data/pdb/*.txt
 data/tmp/*
 predictions/.DS_Store
@@ -143,3 +143,4 @@ datasets/.DS_Store
 .DS_Store
 datasets/.DS_Store
 utilities/paths_jerome.py
+*test.ipynb
