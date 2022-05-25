@@ -126,6 +126,7 @@ baselines/homology/
 
 # MAC OS
 .DS_Store
+*.DS_Store
 
 models/initial_values/*
 models/*retrained*
@@ -136,3 +137,6 @@ data/pdb/*.txt
 data/tmp/*
 predictions/.DS_Store
 .DS_Store
+datasets/.DS_Store
+.DS_Store
+datasets/.DS_Store

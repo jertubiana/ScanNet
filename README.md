@@ -35,6 +35,9 @@ Then:
 pip install -r requirements.txt
 ```
  
+ If you are using a GPU, 
+ 
+ 
 No other external software is necessary to run ScanNet.
 Paths to the library, MSA & structures folders are defined in utilities/paths.py
 
@@ -106,8 +109,7 @@ Below is an example of outputs obtained by predicting PPBS on the Hsp70 protein 
 
 ## Predicting binding sites using evolutionary information
 
-Incorporation of evolutionary information improves substantially performance for predicting protein-protein and protein-disordered binding sites as they are typically more conserved than other surface residues. 
-For punctual jobs, we recommend using the webserver http://bioinfo3d.cs.tau.ac.il/ScanNet/ 
+Incorporation of evolutionary information improves substantially performance for predicting protein-protein and protein-disordered binding sites for natural proteins as they are typically more conserved than other surface residues. For designed proteins, incorporation of evolutionary information is not recommended, as conservation does not reflect functionality. For punctual jobs, we recommend using the webserver http://bioinfo3d.cs.tau.ac.il/ScanNet/ 
 
 Otherwise, a local sequence database (e.g. UniRef30_2021) must be installed together with HH-blits (https://github.com/soedinglab/hh-suite). 
 Once this is done, change the corresponding paths in utilities/paths.py. An homology search will be performed on the local sequence database and the MSA will be constructed. The corresponding command is simply:
@@ -230,7 +232,7 @@ jertubiana@gmail.com
 
 
 ## References
-If you use this program, please cite:  
+If you use this program, please cite:
 
-J. Tubiana, D. Schneidman-Duhovny and H. J. Wolfson. ScanNet An interpretable geometric deep learning model for structure-based protein binding site prediction Journal date link. 
+Tubiana, J., Schneidman-Duhovny, D., & Wolfson, H. J. (2022). ScanNet: An interpretable geometric deep learning model for structure-based protein binding site prediction.  <a href=https://www.nature.com/articles/s41592-022-01490-7> Nature Methods </a> 
 

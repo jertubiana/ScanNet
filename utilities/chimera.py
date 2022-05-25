@@ -93,6 +93,12 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
     model = -1
     multimodel = False
     is_cif = pdb_file[-4:] == '.cif'
+    if is_cif:
+        list_atom_columns = []
+        model_index = None
+        chain_index = None
+        bfactor_index = None
+        resnum_index = None
     with open(output_file,'w') as foutput:
         with open(pdb_file,'r') as finput:
             for line in finput:
@@ -100,14 +106,43 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
                     if (line[:5] == 'MODEL'):
                         model +=1
 
-                if line[:4] == 'ATOM':
+                if is_cif:
+                    if line[:10] == '_atom_site':
+                        list_atom_columns.append(line[11:-1])                        
+
+                if line[:4] in ['ATOM','HETA']:
                     if is_cif:
                         line_splitted_nospaces = [y for y in line.split(' ') if y != '']
-                        model = int(line_splitted_nospaces[-2]) - 1
-                        chain = line_splitted_nospaces[6]
-                        number = int(line_splitted_nospaces[8])
-                        b_factor_index = line.index(line_splitted_nospaces[-8])
-                        print(model,chain,number)
+                        if model_index is None:
+                            try:
+                                model_index = list_atom_columns.index('pdbx_PDB_model_num')
+                            except:
+                                model_index = -2
+                        if chain_index is None:
+                            try:
+                                chain_index = list_atom_columns.index('auth_asym_id')
+                            except:
+                                chain_index = -4
+                        if resnum_index is None:
+                            try:
+                                resnum_index = list_atom_columns.index('auth_seq_id')
+                            except:
+                                resnum_index = -6
+                        if bfactor_index is None:
+                            try:
+                                bfactor_index = list_atom_columns.index('B_iso_or_equiv')
+                            except:
+                                bfactor_index = -8
+
+
+                        model = int(line_splitted_nospaces[model_index]) - 1
+                        chain = line_splitted_nospaces[chain_index]
+                        try:
+                            number = int(line_splitted_nospaces[resnum_index])
+                        except:
+                            number = '.'
+                        b_factor_index = line.index(line_splitted_nospaces[bfactor_index])
+                        b_factor_length = len( line_splitted_nospaces[bfactor_index] )
                     else:
                         model = max(model,0)
                         chain = line[21]
@@ -119,11 +154,11 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
                             index = resids.index(identifier)
                             proba = probas[index]
                         else:
-                            proba = 0
+                            proba = -1
                         if is_cif:
-                            new_line = line[:b_factor_index] + '%.2f' % proba + line[b_factor_index+4:]
+                            new_line = line[:b_factor_index] + ('%.4f' % proba)[:b_factor_length] + line[b_factor_index+b_factor_length:]
                         else:
-                            new_line = line[:60] + '  %.2f'% proba + line[66:]
+                            new_line = line[:60] + ('  %.2f'% proba)[:6] + line[66:]
                     except Exception as e:
                         print(e,line)
                         new_line = line
@@ -164,7 +199,7 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
                 if multimodel:
                     if version == 'surface':
                         f.write("surface #1.%s/%s\n" % ( int(chain[0]) + 1, chain[1]) )
-                        f.write("color by bfactor #1.%s/%s range %s,%s palette Blues transparency 0\n" % (
+                        f.write("color by bfactor #1.%s/%s range %s,%s transparency 0\n" % (
                             int(chain[0]) + 1, chain[1] , mini,maxi ))
                     else:
                         f.write("color by bfactor #1.%s/%s range %s,%s transparency 0\n" % (
@@ -173,7 +208,7 @@ def annotate_pdb_file(pdb_file,csv_file,output_file,output_script=True,mini=0.0,
                 else:
                     if version == 'surface':
                         f.write("surface /%s\n" % (  chain[1]) )
-                        f.write("color by bfactor /%s range %s,%s palette Blues transparency 0\n" % (
+                        f.write("color by bfactor /%s range %s,%s transparency 0\n" % (
                              chain[1] , mini,maxi ))
                     else:
                         f.write("color by bfactor /%s range %s,%s  transparency 0\n" % (

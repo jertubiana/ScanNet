@@ -635,7 +635,7 @@ def predict_interface_residues(
                             else:
                                 mini = 0
                                 maxi = chimera_thresholds[-1]
-                            chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi)
+                            chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi,version='surface' if assembly else 'default')
             else:
                 if layer is None:
                     csv_file = query_output_folder + 'predictions_' + query_name + '.csv'
@@ -658,7 +658,7 @@ def predict_interface_residues(
                             mini = 0
                             maxi = chimera_thresholds[-1]
 
-                        chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi)
+                        chimera.annotate_pdb_file(pdb_file_locations[i], csv_file, annotated_pdb_file, output_script=True, mini=mini, maxi=maxi,version='surface' if assembly else 'default')
 
     if output_format == 'dictionary':
         if ((isinstance(layer, list)) | (isinstance(layer, tuple)) | (not aggregate_models)):
@@ -775,7 +775,7 @@ if __name__ == '__main__':
 
     elif args.mode == 'idp':
         model_folder = idp_model_folder
-        chimera_thresholds = [0.05,0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        chimera_thresholds = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
         if args.use_MSA:
             model_name = idp_model_name_MSA
             model = idp_model_MSA
@@ -786,7 +786,7 @@ if __name__ == '__main__':
     elif args.mode[:-1] == 'idp': # idp1, idp2, idp3, idp4, idp5
         fold = int(args.mode[-1]) - 1
         model_folder = idp_model_folder
-        chimera_thresholds = [0.05,0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        chimera_thresholds = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]
         if args.use_MSA:
             model_name = idp_model_name_MSA + str(args.mode[-1])
             model = idp_model_MSA[fold]

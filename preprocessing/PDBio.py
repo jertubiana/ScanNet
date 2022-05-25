@@ -136,7 +136,7 @@ class myPDBList(Bio.PDB.PDBList):
 
         elif is_uniprot:
             assert file_format in ['pdb','mmCif']
-            url = self.alphafold_server + '/files/AF-%s-F1-model_v1%s'%(code, '.pdb' if file_format == 'pdb' else '.cif')
+            url = self.alphafold_server + '/files/AF-%s-F1-model_v2%s'%(code, '.pdb' if file_format == 'pdb' else '.cif')
             archive_fn = url.split('/')[-1]
         else:
             return
@@ -175,7 +175,8 @@ class myPDBList(Bio.PDB.PDBList):
             urlcleanup()
             urlretrieve(url, filename)
         except IOError:
-            print("Desired structure doesn't exists")
+            if self._verbose:
+                print("Desired structure doesn't exists")
             return
         else:
             if is_pdb:
@@ -255,15 +256,15 @@ def getPDB(identifier_string,biounit=True,structures_folder=structures_folder,ve
         if is_pdb:
             pdb_id = structure_id.lower()
             if biounit:
-                location1 = structures_folder + 'pdb' + pdb_id + '.bioent'
-                location2 = structures_folder + pdb_id + '_bioentry.cif'
+                location2 = structures_folder + 'pdb' + pdb_id + '.bioent'
+                location1 = structures_folder + pdb_id + '_bioentry.cif'
             else:
-                location1 = structures_folder + 'pdb' + pdb_id + '.ent'
-                location2 = structures_folder + pdb_id + '.cif'  # New§ format
+                location2 = structures_folder + 'pdb' + pdb_id + '.ent'
+                location1 = structures_folder + pdb_id + '.cif'  # New§ format
         else:
             uniprot_id = structure_id
-            location1 = structures_folder + 'AF_' + uniprot_id + '.pdb'
-            location2 = structures_folder + 'AF_' + uniprot_id + '.cif'
+            location2 = structures_folder + 'AF_' + uniprot_id + '.pdb'
+            location1 = structures_folder + 'AF_' + uniprot_id + '.cif'
 
         if os.path.exists(location1):
             location = location1
@@ -273,16 +274,16 @@ def getPDB(identifier_string,biounit=True,structures_folder=structures_folder,ve
             pdb_downloader = myPDBList(verbose=verbose)
             if biounit:
                 location = pdb_downloader.retrieve_pdb_file(
-                    structure_id, pdir=structures_folder, file_format='biounit')
+                    structure_id, pdir=structures_folder, file_format='biounit_mmCif')
                 if location is None:
                     location = pdb_downloader.retrieve_pdb_file(
-                        structure_id, pdir=structures_folder, file_format='biounit_mmCif')
+                        structure_id, pdir=structures_folder, file_format='biounit')
             else:
                 location = pdb_downloader.retrieve_pdb_file(
-                    structure_id, pdir=structures_folder, file_format='pdb')
+                    structure_id, pdir=structures_folder, file_format='mmCif')
                 if location is None:
                     location = pdb_downloader.retrieve_pdb_file(
-                        structure_id, pdir=structures_folder, file_format='mmCif')
+                        structure_id, pdir=structures_folder, file_format='pdb')
     return location,chain
 
 

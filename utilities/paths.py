@@ -24,9 +24,9 @@ if mode == 'laptop':
     path_to_multiprot = None # Path to multiprot executable. Only relevant for homology baseline
 
 elif mode == 'laptop_webserver':
-    library_folder = '/Users/jerometubiana/ScanNet_webserver/ScanNet/'
-    structures_folder = '/Users/jerometubiana/ScanNet_webserver/PDB/' # Where pdb/mmCIF structures files are stored.
-    MSA_folder = '/Users/jerometubiana/ScanNet_webserver/ScanNet/MSA/' # Where multiple sequence alignments are stored.
+    library_folder = '/Users/jerometubiana/PostDoc/ScanNet_webserver/v0.2/ScanNet/'
+    structures_folder = '/Users/jerometubiana/PostDoc/ScanNet_webserver/v0.2/PDB/' # Where pdb/mmCIF structures files are stored.
+    MSA_folder = library_folder+'MSA/' # Where multiple sequence alignments are stored.
     predictions_folder = library_folder + 'predictions/' # Output folder.
     model_folder = library_folder + 'models/' # Where the networks as stored as pairs of files (.h5,.data).
     pipeline_folder = library_folder + 'pipelines/' # Where preprocessed datasets are stored.

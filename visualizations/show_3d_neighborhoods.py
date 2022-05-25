@@ -3,7 +3,7 @@ import numpy as np
 from preprocessing import PDBio,PDB_processing,pipelines,protein_chemistry
 from network import neighborhoods
 from visualizations import weight_logo_3d
-
+import copy
 def rgb_to_hex(rgb):
     if isinstance(rgb, str):
         return rgb
@@ -41,7 +41,9 @@ def show_atoms(
         stick_radius=0.75,
         stick_height=0.8,
         camera_position=[0.8, 0.5, 0.8],
-        key_light_position=[0.5, 1, 0.0]
+        key_light_position=[0.5, 1, 0.0],
+        show_frame=False
+
 ):
     default_colors = [
         [210 / 256, 180 / 256, 140 / 256],
@@ -70,6 +72,19 @@ def show_atoms(
     bond_eulers = [orientation2euler(bond_orientation, axis=1) for bond_orientation in bond_orientations]
 
     if render:
+        key_light_position = copy.deepcopy(key_light_position)
+        key_light_position[0] = key_light_position[0] * 10
+        key_light_position[1] = key_light_position[1] * 10
+        key_light_position[2] = key_light_position[2] * 10
+
+
+        camera_position = copy.deepcopy(camera_position)
+        camera_position[0] = camera_position[0] * 10
+        camera_position[1] = camera_position[1] * 10
+        camera_position[2] = camera_position[2] * 10
+
+
+
         key_light = pythreejs.DirectionalLight(position=key_light_position, intensity=.3)
         ambient_light = pythreejs.AmbientLight(intensity=.8)
         camera = pythreejs.PerspectiveCamera(position=camera_position)
@@ -112,6 +127,26 @@ def show_atoms(
     children += list_spheres
     children += list_first_sticks
     children += list_second_sticks
+
+    if show_frame:
+        g = pythreejs.LineSegmentsGeometry(
+            positions=[
+                [[0, 0, 0], [5 * 0.75, 0, 0]],
+                [[0, 0, 0], [0, 5 * 0.75, 0]],
+                [[0, 0, 0], [0, 0, 5 * 0.75]]
+            ],
+            colors=[
+                [[150/256, 150/256, 150/256], [150/256, 150/256, 150/256]],
+                [[150/256, 150/256, 150/256], [150/256, 150/256, 150/256]],
+                [[150/256, 150/256, 150/256], [150/256, 150/256, 150/256]]]
+        )
+        m = pythreejs.LineMaterial(linewidth=2.5, vertexColors='VertexColors')
+        frame = pythreejs.LineSegments2(g, m)
+        children.append(frame)
+        children.append(weight_logo_3d.text_to_sprite('X', np.array([5 * 0.75 + 0.5, 0, 0]), color=rgb_to_hex([150/256, 150/256, 150/256]), fs=0.5))
+        children.append(weight_logo_3d.text_to_sprite('Y', np.array([0, 5 * 0.75 + 0.5, 0]),color=rgb_to_hex([150/256, 150/256, 150/256]), fs=0.5))
+        children.append(weight_logo_3d.text_to_sprite('Z', np.array([0, 0, 5 * 0.75 + 0.5]),color=rgb_to_hex([150/256, 150/256, 150/256]),fs=0.5))
+
 
     if render:
         scene = pythreejs.Scene(children=children)
@@ -169,7 +204,6 @@ def get_neighborhood(
         assembly=False,
         biounit=True,
         Kmax = None
-
 ):
     if Kmax is None:
         if (atom is not None) | (atomindex is not None):
@@ -269,7 +303,8 @@ def get_neighborhood_aa(
         resindex = None,
         assembly=False,
         biounit=True,
-        Kmax = None
+        Kmax = None,
+        MSA_file=None,
 ):
     if Kmax is None:
         Kmax = 16
@@ -282,12 +317,12 @@ def get_neighborhood_aa(
     else:
         chain_ids = [(model,chain)]
     struct, chains = PDBio.load_chains(file=filename,chain_ids=chain_ids)
-    pipeline = pipelines.ScanNetPipeline(aa_features='sequence',
+    pipeline = pipelines.ScanNetPipeline(aa_features='pwm' if MSA_file is not None else 'sequence',
                                          atom_features='id'
                                          )
 
     [aa_triplets, aa_attributes,aa_indices,aa_clouds,
-     _, _, _, _],_ = pipeline.process_example(chains)
+     _, _, _, _],_ = pipeline.process_example(chains,MSA_file=MSA_file)
 
     resids = PDB_processing.get_PDB_indices(chains,return_chain=True,return_model=True)
 
