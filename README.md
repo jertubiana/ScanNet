@@ -39,7 +39,7 @@ pip install -r requirements.txt
  If you are using a GPU, add: 
 
 ```
-pip install tensorflow-gpu
+pip install tensorflow-gpu==1.14
 ```
 
  
