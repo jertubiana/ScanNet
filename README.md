@@ -19,6 +19,9 @@ This can be done in few lines using virtualenv (https://virtualenv.pypa.io/en/la
 
 
 With Anaconda:
+
+If you have not previously installed anaconda, install miniconda or anaconda by following these <a href= https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/linux.html> instructions </a>. Once a proper conda environment has been installed and activated, setup ScanNet as follows:
+
 ```
 conda create -n py_scannet python=3.6.12
 conda activate py_scannet
