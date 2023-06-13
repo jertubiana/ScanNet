@@ -199,6 +199,7 @@ class Pipeline():
                 print('Saving processed dataset...')
                 t = time.time()
                 env = {'inputs': inputs, 'outputs': outputs,'failed_samples':failed_samples}
+                os.makedirs(os.path.dirname(location_processed_dataset),exist_ok=True)
                 io_utils.save_pickle(
                     env, location_processed_dataset)
                 print('Processed dataset saved (t=%.f s)' % (time.time() - t))

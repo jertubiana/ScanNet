@@ -21,7 +21,7 @@ if __name__ == '__main__':
     train = True # True to retrain, False to evaluate the model shown in paper.
     transfer = True # If False, retrain from scratch.
     freeze = False # If True, evaluate the binding site network without fine tuning.
-    use_evolutionary = True # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
+    use_evolutionary = False # True to use evolutionary information (requires hhblits and a sequence database), False otherwise.
     Lmax_aa = 256 if check else 2120
     ''' 
     Lmax_aa is the maximum length of the protein sequences.
