@@ -1,0 +1,30 @@
+name: scannet smoke test
+
+# Reproducibility heartbeat: on every push/PR, run ScanNet interface prediction on a
+# real structure (4ZQK chain A) in structure-only (--noMSA) mode, using the shipped
+# weights, inside the published jertubiana/scannet image — and assert a prediction CSV
+# is produced. This exercises the single-PDB path that #15 broke.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  scannet-4zqk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch a test structure (runner has curl)
+        run: curl -fsSL -o 4ZQK.pdb https://files.rcsb.org/download/4ZQK.pdb
+
+      - name: ScanNet interface prediction on 4ZQK_A (--noMSA)
+        run: |
+          docker run --rm -v "$PWD:/io" jertubiana/scannet bash -lc '
+            set -e
+            # use this checkout"s fixed paths.py (library_folder auto-detect) over the image
+            cp -f /io/utilities/paths.py /ScanNet/utilities/paths.py
+            python /ScanNet/predict_bindingsites.py /io/4ZQK.pdb_A --noMSA
+            ls /ScanNet/predictions/*/predictions_4ZQK.csv
+          '
